@@ -1,7 +1,7 @@
 package com.partnership.rfid.di
 
-import com.partnership.rfid.repository.RFIDRepository
-import com.partnership.rfid.repository.RFIDRepositoryImpl
+import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepository
+import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepositoryImpl
 import com.partnership.rfid.repository.UserRepository
 import com.partnership.rfid.repository.UserRepositoryImpl
 import dagger.Binds

@@ -1,21 +1,46 @@
-package com.partnership.rfid.repository
+package com.partnership.bjbdocumenttrackerreader.repository
 
+import android.util.Log
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
+import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
 import com.partnership.bjbdocumenttrackerreader.data.network.ApiService
+import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepository
 import com.partnership.rfid.data.model.BaseResponse
-import com.partnership.rfid.data.model.GetLastScan
 import com.partnership.rfid.data.model.UploadData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okio.IOException
 import javax.inject.Inject
 
 class RFIDRepositoryImpl @Inject constructor(
     private val apiService: ApiService
 ) : RFIDRepository {
-    override suspend fun uploadData(data: String): ResultWrapper<BaseResponse> {
+    override suspend fun uploadDataDocument(data: String): ResultWrapper<BaseResponse<Unit>> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.uploadData(UploadData(data))
+                val response = apiService.uploadDataDocument(UploadData(data))
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null) {
+                        ResultWrapper.Success(body)
+                    } else {
+                        ResultWrapper.Error("Response body is null")
+                    }
+                } else {
+                    ResultWrapper.Error("Error: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                ResultWrapper.Error(e.message ?: "Unknown Error")
+            } catch (e: IOException){
+                ResultWrapper.NetworkError(e.message ?:"Network Error")
+            }
+        }
+    }
+
+    override suspend fun uploadDataAgunan(data: String): ResultWrapper<BaseResponse<Unit>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.uploadDataDocument(UploadData(data))
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null) {
@@ -32,10 +57,10 @@ class RFIDRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getLastScan(): ResultWrapper<GetLastScan> {
+    override suspend fun getDashboard(): ResultWrapper<BaseResponse<GetDashboard>> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getLastScan()
+                val response = apiService.getDashboard()
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null) {
@@ -51,4 +76,6 @@ class RFIDRepositoryImpl @Inject constructor(
             }
         }
     }
+
+
 }

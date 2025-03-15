@@ -9,7 +9,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.partnership.bjbdocumenttrackerreader.data.model.TagInfo
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
+import com.partnership.bjbdocumenttrackerreader.util.SingleLiveEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,11 +32,12 @@ class RFIDViewModel @Inject constructor(private val reader: RFIDManager): ViewMo
             }
         }
     }
-    private val _isReaderInit = MutableLiveData<Boolean>()
+    private val _isReaderInit = MutableLiveData(false)
     val isReaderInit: LiveData<Boolean> get() = _isReaderInit
 
-    private val _messageReader = MutableLiveData<String>()
+    private val _messageReader = SingleLiveEvent<String>()
     val messageReader: LiveData<String> get() = _messageReader
+
 
     private val _isScanning = MutableLiveData<Boolean>()
     val isScanning: LiveData<Boolean> get() = _isScanning
@@ -42,16 +45,25 @@ class RFIDViewModel @Inject constructor(private val reader: RFIDManager): ViewMo
     private val _tagList = MutableLiveData<MutableList<TagInfo>>(mutableListOf())
     val tagList: MutableLiveData<MutableList<TagInfo>> get() = _tagList
 
+    private var hasInitReader = false // <- tambahkan flag internal
+
+
     init {
         _isScanning.value = false
     }
 
-    fun initReader(context: Context){
-        reader.initUHF(context){isInited,message ->
-            _isReaderInit.value = isInited
-            _messageReader.value = message
+    fun initReader(context: Context) {
+        if (hasInitReader) return
+        hasInitReader = true
+
+        viewModelScope.launch(Dispatchers.IO) {
+            reader.initUHF(context) { isInited, message ->
+                _isReaderInit.postValue(isInited)
+                _messageReader.postValue(message)
+            }
         }
     }
+
 
     fun getCurrentPower(): Int? {
         return reader.getCurrentPower()
@@ -135,4 +147,6 @@ class RFIDViewModel @Inject constructor(private val reader: RFIDManager): ViewMo
         isRunning = false
         handler.removeCallbacks(timerRunnable)
     }
+
+
 }

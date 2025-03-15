@@ -35,4 +35,10 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp() || super.onSupportNavigateUp()
 
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.stopReadTag()
+        viewModel.releaseReader()
+    }
 }

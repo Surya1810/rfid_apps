@@ -1,5 +1,6 @@
 package com.partnership.bjbdocumenttrackerreader.data.network
 
+import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
 import com.partnership.rfid.data.model.BaseResponse
 import com.partnership.rfid.data.model.GetLastScan
 import com.partnership.rfid.data.model.UploadData
@@ -10,9 +11,12 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface ApiService {
-    @POST("api/data")
-    suspend fun uploadData(@Body request: UploadData): Response<BaseResponse>
+    @POST("api/scan-document")
+    suspend fun uploadDataDocument(@Body request: UploadData): Response<BaseResponse<Unit>>
 
-    @GET("api/last-scan")
-    suspend fun getLastScan(): Response<GetLastScan>
+    @POST("api/scan-agunan")
+    suspend fun uploadDataAgunan(@Body request: UploadData): Response<BaseResponse<Unit>>
+
+    @GET("api/dashboard")
+    suspend fun getDashboard(): Response<BaseResponse<GetDashboard>>
 }

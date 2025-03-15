@@ -14,5 +14,5 @@ sealed class ResultWrapper<out T> {
     // Representasi proses yang sedang berjalan
     object Loading : ResultWrapper<Nothing>()
 
-    object Idle : ResultWrapper<Nothing>()
+    data class NetworkError<out T>(val error: String) : ResultWrapper<T>()
 }
