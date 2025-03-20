@@ -66,6 +66,7 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment:2.8.8")
     implementation("androidx.navigation:navigation-ui:2.8.8")
     implementation("androidx.navigation:navigation-dynamic-features-fragment:2.8.8")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01")
 }
 
 kapt {

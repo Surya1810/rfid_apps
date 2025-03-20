@@ -1,11 +1,9 @@
 package com.partnership.bjbdocumenttrackerreader.repository
 
-import android.util.Log
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
 import com.partnership.bjbdocumenttrackerreader.data.network.ApiService
-import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepository
-import com.partnership.rfid.data.model.BaseResponse
+import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import com.partnership.rfid.data.model.UploadData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -40,7 +38,7 @@ class RFIDRepositoryImpl @Inject constructor(
     override suspend fun uploadDataAgunan(data: String): ResultWrapper<BaseResponse<Unit>> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.uploadDataDocument(UploadData(data))
+                val response = apiService.uploadDataAgunan(UploadData(data))
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null) {
@@ -65,6 +63,7 @@ class RFIDRepositoryImpl @Inject constructor(
                     val body = response.body()
                     if (body != null) {
                         ResultWrapper.Success(body)
+
                     } else {
                         ResultWrapper.Error("Response body is null")
                     }

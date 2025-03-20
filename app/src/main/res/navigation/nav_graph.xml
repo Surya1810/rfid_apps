@@ -18,11 +18,17 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.partnership.bjbdocumenttrackerreader.ui.home.HomeFragment"
-        android:label="fragment_home"
+        android:label=""
         tools:layout="@layout/fragment_home" >
         <action
             android:id="@+id/action_homeFragment_to_scanFragment"
             app:destination="@id/scanFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_searchDocumentFragment"
+            app:destination="@id/searchDocumentFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_searchAgunanFragment"
+            app:destination="@id/searchAgunanFragment" />
     </fragment>
     <fragment
         android:id="@+id/scanFragment"
@@ -38,4 +44,43 @@
         android:name="com.partnership.bjbdocumenttrackerreader.ui.scan.SettingReaderFragment"
         android:label="Setting Reader"
         tools:layout="@layout/fragment_setting_reader" />
+    <fragment
+        android:id="@+id/searchingDocumentFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.search.SearchingDocumentFragment"
+        android:label="Searching Document"
+        tools:layout="@layout/fragment_searching_document" >
+        <action
+            android:id="@+id/action_searchingDocumentFragment_to_settingReaderFragment"
+            app:destination="@id/settingReaderFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/searchAgunanFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.search.SearchAgunanFragment"
+        android:label="Search Agunan" >
+        <action
+            android:id="@+id/action_searchAgunanFragment_to_searchingAgunanFragment"
+            app:destination="@id/searchingAgunanFragment" />
+        <action
+            android:id="@+id/action_searchAgunanFragment_to_settingReaderFragment"
+            app:destination="@id/settingReaderFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/searchDocumentFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.search.SearchDocumentFragment"
+        android:label="Search Document" >
+        <action
+            android:id="@+id/action_searchDocumentFragment_to_searchingDocumentFragment"
+            app:destination="@id/searchingDocumentFragment" />
+        <action
+            android:id="@+id/action_searchDocumentFragment_to_settingReaderFragment"
+            app:destination="@id/settingReaderFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/searchingAgunanFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.search.SearchingAgunanFragment"
+        android:label="Searching Agunan" >
+        <action
+            android:id="@+id/action_searchingAgunanFragment_to_settingReaderFragment"
+            app:destination="@id/settingReaderFragment" />
+    </fragment>
 </navigation>

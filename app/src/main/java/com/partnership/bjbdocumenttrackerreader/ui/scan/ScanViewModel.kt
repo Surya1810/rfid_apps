@@ -4,9 +4,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
-import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
 import com.partnership.bjbdocumenttrackerreader.data.model.TagInfo
-import com.partnership.rfid.data.model.BaseResponse
+import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch

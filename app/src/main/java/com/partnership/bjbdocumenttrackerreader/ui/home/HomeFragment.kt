@@ -15,6 +15,8 @@ import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentHomeBinding
 import dagger.hilt.android.AndroidEntryPoint
+import java.text.NumberFormat
+import java.util.Locale
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -32,34 +34,56 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // SET REFRESH LISTENER --> HARUS SELALU ADA
+        binding.strHome.setOnRefreshListener {
+            viewModel.getDashboard()
+            setRefreshing(true)
+        }
+
         binding.btScan.setOnClickListener {
             findNavController().navigate(R.id.action_homeFragment_to_scanFragment)
         }
 
         if (viewModel.dataDashboard.value == null) {
             viewModel.getDashboard()
+            setRefreshing(true)
+        }
+
+        binding.btSearchAgunan.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_searchAgunanFragment)
+        }
+
+        binding.btSearchDocument.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_searchDocumentFragment)
         }
 
         viewModel.dataDashboard.observe(viewLifecycleOwner) {
+            Log.d("DEBUG", "Observer triggered: ${it.javaClass.simpleName}")
+            setRefreshing(false) // Tambahkan di awal observer sementara waktu
             when (it) {
                 is ResultWrapper.Error -> {
+                    setRefreshing(false)
                     Snackbar.make(binding.root, "Terjadi masalah harap hubungi Admin", Snackbar.LENGTH_LONG).show()
                     Log.e(TAG, "uploadData: ${it.error}")
                 }
                 is ResultWrapper.ErrorResponse -> {
+                    setRefreshing(false)
                     Snackbar.make(binding.root, it.error, Snackbar.LENGTH_LONG).show()
                     Log.e(TAG, "uploadData: ${it.error}")
                 }
                 ResultWrapper.Loading -> {
-                    // Tambahkan UI loading jika perlu
+                    setRefreshing(true)
                 }
                 is ResultWrapper.Success -> {
+                    setRefreshing(false)
+
                     it.data.data?.let { data ->
                         setData(data)
                         Log.e(TAG, "onViewCreated: $data")
                     }
                 }
                 is ResultWrapper.NetworkError -> {
+                    setRefreshing(false)
                     Snackbar.make(binding.root, "Jaringan bermasalah, Harap mendekat ke wifi", Snackbar.LENGTH_LONG)
                         .setAction("Baik") {}
                         .show()
@@ -70,15 +94,26 @@ class HomeFragment : Fragment() {
     }
 
 
+    fun formatToRupiah(value: Double): String {
+        val format = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
+        return format.format(value).replace(",00", "").replace("Rp", "Rp")
+    }
+
+
     fun setData(dashboardData: GetDashboard){
         binding.tvLts.text = dashboardData.overview.lastTimeScan
         binding.tvTotalData.text = dashboardData.overview.totalData.toString()
-        binding.tvTotalNilai.text = dashboardData.overview.totalvalue.toString()
+        binding.tvTotalNilai.text = formatToRupiah(dashboardData.overview.totalvalue)
         binding.tvTotalDocument.text = dashboardData.totalDocuments.toString()
         binding.tvTotalAgunan.text = dashboardData.totalAgunan.toString()
-        binding.tvValueLost.text = dashboardData.dashboard.valueLostDocument.toString()
+        binding.tvValueLost.text = formatToRupiah(dashboardData.dashboard.valueLostDocument)
         binding.tvFound.text = dashboardData.dashboard.totalDocumentsFound.toString()
     }
+
+    private fun setRefreshing(isRefreshing: Boolean) {
+        binding.strHome.isRefreshing = isRefreshing
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

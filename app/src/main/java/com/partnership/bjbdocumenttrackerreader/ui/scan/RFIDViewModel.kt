@@ -126,10 +126,11 @@ class RFIDViewModel @Inject constructor(private val reader: RFIDManager): ViewMo
     }
 
     private fun formatTime(millis: Long): String {
-        val seconds = (millis / 1000) % 60
         val minutes = (millis / 1000) / 60
+        val seconds = (millis / 1000) % 60
         return String.format("%02d:%02d", minutes, seconds)
     }
+
 
     override fun onCleared() {
         super.onCleared()

@@ -1,14 +1,18 @@
 package com.partnership.bjbdocumenttrackerreader.data.network
 
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
-import com.partnership.rfid.data.model.BaseResponse
-import com.partnership.rfid.data.model.GetLastScan
+import com.partnership.bjbdocumenttrackerreader.data.model.GetSearchAgunan
+import com.partnership.bjbdocumenttrackerreader.data.model.GetSearchDocument
+import com.partnership.bjbdocumenttrackerreader.data.model.ItemStatus
+import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
+import com.partnership.bjbdocumenttrackerreader.data.model.DetailAgunan
+import com.partnership.bjbdocumenttrackerreader.data.model.DocumentDetail
 import com.partnership.rfid.data.model.UploadData
-import okhttp3.Request
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface ApiService {
     @POST("api/scan-document")
@@ -19,4 +23,33 @@ interface ApiService {
 
     @GET("api/dashboard")
     suspend fun getDashboard(): Response<BaseResponse<GetDashboard>>
+
+    @GET("api/document-lost")
+    suspend fun getDocumentLost(): Response<BaseResponse<List<ItemStatus>>>
+
+    @POST("api/document-lost")
+    suspend fun postDocumentLost(@Body request: UploadData): Response<BaseResponse<Unit>>
+
+    @GET("api/agunan-lost")
+    suspend fun getAgunanLost(): Response<BaseResponse<List<ItemStatus>>>
+
+    @POST("api/agunan-lost")
+    suspend fun postAgunanLost(@Body request: UploadData): Response<BaseResponse<Unit>>
+
+    @GET("api/search-document")
+    suspend fun getSearchDocument(
+        @Query("search") search: String?
+    ): Response<BaseResponse<List<DocumentDetail>>>
+
+    @POST("api/search-document")
+    suspend fun postSearchDocument(@Body uploadData: UploadData): Response<BaseResponse<Unit>>
+
+    @GET("api/search-agunan")
+    suspend fun getSearchAgunan(
+        @Query("search") search: String?
+    ): Response<BaseResponse<List<DetailAgunan>>>
+
+    @POST("api/search-agunan")
+    suspend fun postSearchAgunan(@Body uploadData: UploadData): Response<BaseResponse<Unit>>
+
 }

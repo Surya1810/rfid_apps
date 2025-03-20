@@ -5,6 +5,7 @@
 
     <color name="md_theme_primary">#003C65</color>
     <color name="md_theme_yellow">#efcb13</color>
+    <color name="md_theme_green">#4CAF50</color>
     <color name="md_theme_onPrimary">#FFFFFF</color>
     <color name="md_theme_tersier">#24aae1</color>
     <color name="md_theme_primaryContainer">#286091</color>

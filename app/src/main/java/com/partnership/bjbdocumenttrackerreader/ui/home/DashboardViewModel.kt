@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
 import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepositoryImpl
-import com.partnership.rfid.data.model.BaseResponse
+import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,7 +19,7 @@ import javax.inject.Inject
 class DashboardViewModel @Inject constructor(private val repository: RFIDRepositoryImpl): ViewModel() {
     private val _getDashboard = MutableLiveData<ResultWrapper<BaseResponse<GetDashboard>>>()
     val dataDashboard: LiveData<ResultWrapper<BaseResponse<GetDashboard>>>
-        get() = _getDashboard.distinctUntilChanged()
+        get() = _getDashboard
 
 
     fun getDashboard() {
@@ -30,7 +30,5 @@ class DashboardViewModel @Inject constructor(private val repository: RFIDReposit
             }
         }
     }
-
-
 
 }

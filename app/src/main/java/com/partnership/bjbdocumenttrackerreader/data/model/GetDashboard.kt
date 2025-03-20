@@ -10,7 +10,7 @@ data class GetDashboard(
 data class Overview(
     val lastTimeScan: String,
     val totalData: Int,
-    val totalvalue: Int
+    val totalvalue: Double
 )
 
 data class DashboardDetail(

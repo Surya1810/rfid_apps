@@ -32,12 +32,13 @@ import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.TagInfo
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentScanBinding
+import com.partnership.bjbdocumenttrackerreader.reader.ReaderKeyEventHandler
 import com.partnership.bjbdocumenttrackerreader.ui.adapter.EpcAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class ScanFragment : Fragment() {
+class ScanFragment : Fragment(), ReaderKeyEventHandler {
     private val rfidViewModel: RFIDViewModel by activityViewModels()
     private val scanViewModel: ScanViewModel by viewModels()
 
@@ -58,8 +59,6 @@ class ScanFragment : Fragment() {
 
         setupToolbar()
         setupToggleButton()
-        initReaderIfNeeded()
-
         return binding.root
     }
 
@@ -187,8 +186,10 @@ class ScanFragment : Fragment() {
                 }
 
                 is ResultWrapper.Success -> {
-                    Snackbar.make(binding.root, it.data.message, Snackbar.LENGTH_LONG)
-                        .show()
+                    it.data.message?.let { it1 ->
+                        Snackbar.make(binding.root, it1, Snackbar.LENGTH_LONG)
+                            .show()
+                    }
                 }
 
                 is ResultWrapper.NetworkError -> {
@@ -268,39 +269,16 @@ class ScanFragment : Fragment() {
         }
     }
 
-    private fun initReaderIfNeeded() {
-        if (rfidViewModel.isReaderInit.value == false) {
-            showLoadingDialog()
-            rfidViewModel.initReader(requireActivity())
-        }
-
-        rfidViewModel.messageReader.observe(viewLifecycleOwner) { message ->
-            dismissLoadingDialog()
-            Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
-        }
-    }
-
-
-    private var loadingDialog: AlertDialog? = null
-
-    private fun showLoadingDialog() {
-        val builder = AlertDialog.Builder(requireContext())
-        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_loading, null)
-        builder.setView(view)
-        builder.setCancelable(false)
-        loadingDialog = builder.create()
-        loadingDialog?.show()
-    }
-
-    private fun dismissLoadingDialog() {
-        loadingDialog?.dismiss()
-        loadingDialog = null
-    }
-
-
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun myOnKeyDown() {
+        scanTag(isScanning)
+    }
+
+    override fun myOnKeyUp() {
+
     }
 }

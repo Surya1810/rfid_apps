@@ -124,6 +124,20 @@ class RFIDManager {
         return rfid?.power
     }
 
+    fun setEpcFilter(epc: String, ptr: Int = 32): Boolean? {
+        val len = epc.length * 4
+        return rfid?.setFilter(RFIDWithUHFUART.Bank_EPC, ptr, len, epc)
+    }
+
+    fun disableFilter(): Boolean {
+        val emptyData = ""
+        return rfid?.setFilter(RFIDWithUHFUART.Bank_EPC, 0, 0, emptyData) == true &&
+                rfid?.setFilter(RFIDWithUHFUART.Bank_TID, 0, 0, emptyData)!! &&
+                rfid?.setFilter(RFIDWithUHFUART.Bank_USER, 0, 0, emptyData)!!
+    }
+
+
+
     fun releaseRFID(){
         rfid?.free()
     }

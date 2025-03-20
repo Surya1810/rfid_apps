@@ -11,6 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -27,10 +28,15 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .connectTimeout(60, TimeUnit.SECONDS)   // waktu maksimum untuk membuat koneksi
+            .readTimeout(60, TimeUnit.SECONDS)      // waktu maksimum untuk membaca response
+            .writeTimeout(60, TimeUnit.SECONDS)     // waktu maksimum untuk menulis data ke server
             .build()
     }
+
 
     @Provides
     @Singleton
