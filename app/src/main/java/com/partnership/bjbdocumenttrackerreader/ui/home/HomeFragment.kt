@@ -9,11 +9,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentHomeBinding
+import com.partnership.bjbdocumenttrackerreader.ui.adapter.DocumentAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import java.text.NumberFormat
 import java.util.Locale
@@ -49,6 +51,10 @@ class HomeFragment : Fragment() {
             setRefreshing(true)
         }
 
+        binding.btSeeAll.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_listLostFragment)
+        }
+
         binding.btSearchAgunan.setOnClickListener {
             findNavController().navigate(R.id.action_homeFragment_to_searchAgunanFragment)
         }
@@ -80,6 +86,7 @@ class HomeFragment : Fragment() {
                     it.data.data?.let { data ->
                         setData(data)
                         Log.e(TAG, "onViewCreated: $data")
+                        setUpRecycleView(it.data.data.dashboard.listDocumentLost)
                     }
                 }
                 is ResultWrapper.NetworkError -> {
@@ -99,6 +106,15 @@ class HomeFragment : Fragment() {
         return format.format(value).replace(",00", "").replace("Rp", "Rp")
     }
 
+    fun setUpRecycleView(documentList: List<String>){
+        val adapter = DocumentAdapter(documentList)
+
+        binding.rvDocument.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            this.adapter = adapter
+        }
+    }
+
 
     fun setData(dashboardData: GetDashboard){
         binding.tvLts.text = dashboardData.overview.lastTimeScan
@@ -106,6 +122,7 @@ class HomeFragment : Fragment() {
         binding.tvTotalNilai.text = formatToRupiah(dashboardData.overview.totalvalue)
         binding.tvTotalDocument.text = dashboardData.totalDocuments.toString()
         binding.tvTotalAgunan.text = dashboardData.totalAgunan.toString()
+        binding.tvLost.text = dashboardData.dashboard.totalDocumentsLost.toString()
         binding.tvValueLost.text = formatToRupiah(dashboardData.dashboard.valueLostDocument)
         binding.tvFound.text = dashboardData.dashboard.totalDocumentsFound.toString()
     }

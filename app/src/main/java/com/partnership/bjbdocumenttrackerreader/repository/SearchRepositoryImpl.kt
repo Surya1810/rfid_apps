@@ -6,6 +6,7 @@ import com.partnership.bjbdocumenttrackerreader.data.model.GetSearchDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.ItemStatus
 import com.partnership.bjbdocumenttrackerreader.data.network.ApiService
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
+import com.partnership.bjbdocumenttrackerreader.data.model.Data
 import com.partnership.bjbdocumenttrackerreader.data.model.DetailAgunan
 import com.partnership.bjbdocumenttrackerreader.data.model.DocumentDetail
 import com.partnership.rfid.data.model.UploadData
@@ -38,7 +39,7 @@ class SearchRepositoryImpl @Inject constructor(private val apiService: ApiServic
         }
     }
 
-    override suspend fun postLostDocument(uploadData: UploadData): ResultWrapper<BaseResponse<Unit>> {
+    override suspend fun postLostDocument(uploadData: Data): ResultWrapper<BaseResponse<Unit>> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.postDocumentLost(uploadData)
@@ -84,7 +85,7 @@ class SearchRepositoryImpl @Inject constructor(private val apiService: ApiServic
         }
     }
 
-    override suspend fun postSearchDocument(uploadData: UploadData): ResultWrapper<BaseResponse<Unit>> {
+    override suspend fun postSearchDocument(uploadData: Data): ResultWrapper<BaseResponse<Unit>> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.postSearchDocument(uploadData)
@@ -128,7 +129,7 @@ class SearchRepositoryImpl @Inject constructor(private val apiService: ApiServic
         }
     }
 
-    override suspend fun postLostAgunan(uploadData: UploadData): ResultWrapper<BaseResponse<Unit>> {
+    override suspend fun postLostAgunan(uploadData: Data): ResultWrapper<BaseResponse<Unit>> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.postAgunanLost(uploadData)
@@ -172,7 +173,7 @@ class SearchRepositoryImpl @Inject constructor(private val apiService: ApiServic
         }
     }
 
-    override suspend fun postSearchAgunan(uploadData: UploadData): ResultWrapper<BaseResponse<Unit>> {
+    override suspend fun postSearchAgunan(uploadData: Data): ResultWrapper<BaseResponse<Unit>> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.postSearchAgunan(uploadData)

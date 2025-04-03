@@ -29,6 +29,9 @@
         <action
             android:id="@+id/action_homeFragment_to_searchAgunanFragment"
             app:destination="@id/searchAgunanFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_listLostFragment"
+            app:destination="@id/listLostFragment" />
     </fragment>
     <fragment
         android:id="@+id/scanFragment"
@@ -83,4 +86,9 @@
             android:id="@+id/action_searchingAgunanFragment_to_settingReaderFragment"
             app:destination="@id/settingReaderFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/listLostFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.home.ListLostFragment"
+        android:label="fragment_list_lost"
+        tools:layout="@layout/fragment_list_lost" />
 </navigation>

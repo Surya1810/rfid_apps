@@ -26,9 +26,16 @@ import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.DocumentDetail
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentSearchingDocumentBinding
+import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
+import com.partnership.bjbdocumenttrackerreader.util.Utils
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SearchingDocumentFragment : Fragment() {
     private var isScanning = false
+    @Inject lateinit var soundManager: BeepSoundManager
+
     private val searchViewModel : SearchViewModel by activityViewModels()
     private var _binding: FragmentSearchingDocumentBinding? = null
     private val binding get() = _binding!!
@@ -47,6 +54,12 @@ class SearchingDocumentFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupToolbar()
         setUpMenu()
+
+        searchViewModel.soundBeep.observe(viewLifecycleOwner){
+            if (it){
+                soundManager.playBeep()
+            }
+        }
 
         searchViewModel.searchDocumentEpc.observe(viewLifecycleOwner){
             setDataToView(it)
@@ -69,10 +82,12 @@ class SearchingDocumentFragment : Fragment() {
             }
         }
         binding.btSend.setOnClickListener {
+            Utils.showLoading(requireContext())
             searchViewModel.sendDataSearch(epcToSearch,true)
         }
 
         searchViewModel.postMessage.observe(viewLifecycleOwner){result ->
+            Utils.dismissLoading()
             when (result) {
                 is ResultWrapper.Error -> {
                     Snackbar.make(binding.root, "Terjadi masalah harap hubungi Admin", Snackbar.LENGTH_LONG).show()
@@ -100,9 +115,8 @@ class SearchingDocumentFragment : Fragment() {
         }
         searchViewModel.isFound.observe(viewLifecycleOwner) {
             isFound = it
-            if (it) {
+            if (isScanning) {
                 binding.tvStatusItem.text = "Dokumen Ditemukan"
-
                 // Stop scanning via ViewModel
                 searchViewModel.stopReadTag()
                 searchViewModel.clearFilterReader()
@@ -175,6 +189,8 @@ class SearchingDocumentFragment : Fragment() {
 
         binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
         binding.toolbarScan.setNavigationOnClickListener {
+            searchViewModel.clearFilterReader()
+            searchViewModel.setNotFound()
             findNavController().navigateUp()
         }
     }
@@ -182,5 +198,6 @@ class SearchingDocumentFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        searchViewModel.setNotFound()
     }
 }

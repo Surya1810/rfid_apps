@@ -16,6 +16,7 @@ import com.partnership.bjbdocumenttrackerreader.data.model.ItemStatus
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
 import com.partnership.bjbdocumenttrackerreader.repository.SearchRepositoryImpl
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
+import com.partnership.bjbdocumenttrackerreader.data.model.Data
 import com.partnership.bjbdocumenttrackerreader.data.model.DetailAgunan
 import com.partnership.rfid.data.model.UploadData
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,6 +43,9 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
         }
     }
 
+    private val _soundBeep = MutableLiveData<Boolean>()
+    val soundBeep : LiveData<Boolean> get() = _soundBeep
+
     private val _setDataToSearchingAgunan = MutableLiveData<DetailAgunan>()
     val searchAgunanEpc: LiveData<DetailAgunan> get() = _setDataToSearchingAgunan
 
@@ -49,7 +53,10 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
     val searchDocumentEpc : LiveData<DocumentDetail> get() = _setDataToSearchingDocument
 
     private val _getLostDocument = MutableLiveData<ResultWrapper<BaseResponse<List<ItemStatus>>>>()
-    val getLostEpc : LiveData<ResultWrapper<BaseResponse<List<ItemStatus>>>> get() = _getLostDocument
+    val getLostEpcDocument : LiveData<ResultWrapper<BaseResponse<List<ItemStatus>>>> get() = _getLostDocument
+
+    private val _getLostAgunan = MutableLiveData<ResultWrapper<BaseResponse<List<ItemStatus>>>>()
+    val getLostEpcAgunan : LiveData<ResultWrapper<BaseResponse<List<ItemStatus>>>> get() = _getLostAgunan
 
     private val _isScanning = MutableLiveData<Boolean>()
     val isScanning: LiveData<Boolean> get() = _isScanning
@@ -73,6 +80,10 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
         _isFound.value = false
     }
 
+    fun setNotFound(){
+        _isFound.value = false
+    }
+
     fun getListSearchDocument(search: String){
         viewModelScope.launch {
             _listSearchDocument.value = repository.getSearchDocument(search)
@@ -81,7 +92,7 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
 
     fun getListSearchAgunan(search: String){
         viewModelScope.launch {
-            _listSearchAgunan.value = repository.getSearchAgunan(search)
+            _listSearchAgunan.postValue(repository.getSearchAgunan(search))
         }
     }
 
@@ -103,11 +114,13 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
             .joinToString(separator = ",") { it.epc }
         if (isDocument){
             viewModelScope.launch {
-                repository.postLostDocument(UploadData(foundTagsList))
+                val result = repository.postLostDocument(Data(foundTagsList))
+                _postMessage.postValue(result)
             }
         }else{
             viewModelScope.launch {
-                repository.postLostAgunan(UploadData(foundTagsList))
+                val result =  repository.postLostAgunan(Data(foundTagsList))
+                _postMessage.postValue(result)
             }
         }
     }
@@ -115,14 +128,14 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
     fun sendDataSearch(epc: String, isDocument: Boolean) {
         if (isDocument){
             viewModelScope.launch {
-                val result = repository.postSearchDocument(UploadData(epc))
-                _postMessage.value = result
+                val result = repository.postSearchDocument(Data(epc))
+                _postMessage.postValue(result)
                 Log.d("SendSearch", "Document Result: $result")
             }
         } else {
             viewModelScope.launch {
-                val result = repository.postSearchAgunan(UploadData(epc))
-                _postMessage.value = result
+                val result = repository.postSearchAgunan(Data(epc))
+                _postMessage.postValue(result)
                 Log.d("SendSearch", "Agunan Result: $result")
             }
         }
@@ -145,7 +158,7 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
     }
 
     fun addLostTag(lostTags : List<ItemStatus>){
-        _displayedList.value = lostTags
+        _displayedList.postValue(lostTags)
     }
 
     fun searchSingleTag(epc: String){
@@ -154,8 +167,13 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
             if (uhftagInfo.epc == epc){
                 _isFound.postValue(true)
                 _isScanning.postValue(false)
+                _soundBeep.postValue(true)
             }
         }
+    }
+
+    fun setSoundToFalse(){
+        _soundBeep.value = false
     }
 
     fun readTagAuto(){
@@ -170,10 +188,17 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
         }
     }
 
-    fun getLostEpc(){
-        viewModelScope.launch {
-            _getLostDocument.value = repository.getLostDocument()
+    fun getLostEpc(isDocument: Boolean){
+        if (isDocument){
+            viewModelScope.launch {
+                _getLostDocument.value = repository.getLostDocument()
+            }
+        }else{
+            viewModelScope.launch {
+                _getLostAgunan.value = repository.getLostAgunan()
+            }
         }
+
     }
 
     fun stopReadTag(){
@@ -192,6 +217,7 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
             if (!item.isThere) {
                 currentList[index] = item.copy(isThere = true)
                 _displayedList.postValue(currentList)
+                _soundBeep.postValue(true)
             }
         }
     }

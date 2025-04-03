@@ -21,20 +21,20 @@ class EpcAdapter(private val items: MutableList<TagInfo>) : RecyclerView.Adapter
         return items.size
     }
 
-    // Menghubungkan ViewHolder dengan data item
+    // Menghubungkan ViewHolder dengan Data item
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EpcViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.rv_epc, parent, false)
         return EpcViewHolder(view)
     }
 
-    // Mengisi data pada item dan menampilkan data ke dalam tampilan
+    // Mengisi Data pada item dan menampilkan Data ke dalam tampilan
     override fun onBindViewHolder(holder: EpcViewHolder, position: Int) {
         val currentItem = items[position]
         holder.epc.text = currentItem.epc
     }
 
-    // Memperbarui data yang ada dengan DiffUtil untuk efisiensi pembaruan
+    // Memperbarui Data yang ada dengan DiffUtil untuk efisiensi pembaruan
     fun updateData(newItems: List<TagInfo>) {
         val diffCallback = EpcDiffCallback(items, newItems)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
@@ -44,7 +44,7 @@ class EpcAdapter(private val items: MutableList<TagInfo>) : RecyclerView.Adapter
         diffResult.dispatchUpdatesTo(this)
     }
 
-    // DiffUtil Callback untuk memeriksa perubahan data
+    // DiffUtil Callback untuk memeriksa perubahan Data
     class EpcDiffCallback(
         private val oldList: List<TagInfo>,
         private val newList: List<TagInfo>

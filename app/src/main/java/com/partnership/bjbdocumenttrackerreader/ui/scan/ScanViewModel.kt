@@ -17,19 +17,20 @@ class ScanViewModel @Inject constructor(private val repository: RFIDRepositoryIm
     private val _uploadData = MutableLiveData<ResultWrapper<BaseResponse<Unit>>>()
     val resultUploadData: MutableLiveData<ResultWrapper<BaseResponse<Unit>>> get() = _uploadData
 
+    fun uploadData(epcList: List<TagInfo>, isDocument: Boolean) {
+        val epcData = epcList.map { it.epc } // ubah jadi List<String>
 
-
-    fun uploadData(epcList:List<TagInfo>,isDocument: Boolean){
-        val epcData = epcList.joinToString(separator = ",") { it.epc }
         viewModelScope.launch {
-            if (isDocument){
-                _uploadData.value = repository.uploadDataDocument(epcData)
-            }else{
-                _uploadData.value = repository.uploadDataAgunan(epcData)
+            val uploadResult = if (isDocument) {
+                repository.uploadDataDocument(epcData)
+            } else {
+                repository.uploadDataAgunan(epcData)
             }
 
+            _uploadData.postValue(uploadResult)
         }
     }
+
 
 
 

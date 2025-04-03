@@ -11,17 +11,28 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.ItemStatus
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentSearchDocumentLostBinding
+import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
 import com.partnership.bjbdocumenttrackerreader.ui.adapter.EpcLostAdapter
+import com.partnership.bjbdocumenttrackerreader.util.Utils
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SearchLostDocumentFragment : Fragment() {
+
+    @Inject  lateinit var soundManager: BeepSoundManager
     private var isScanning = false
     private val rfidViewModel : SearchViewModel by viewModels()
     private lateinit var adapter: EpcLostAdapter
@@ -49,8 +60,8 @@ class SearchLostDocumentFragment : Fragment() {
         adapter = EpcLostAdapter()
         binding.rvEpc.adapter = adapter
         binding.rvEpc.layoutManager = LinearLayoutManager(requireContext())
-        if (rfidViewModel.getLostEpc.value == null){
-            rfidViewModel.getLostEpc()
+        if (rfidViewModel.getLostEpcDocument.value == null){
+            rfidViewModel.getLostEpc(true)
         }
         var listLost = (19..31).map { number ->
             val epc = "020100" + number.toString().padStart(2, '0')
@@ -59,12 +70,19 @@ class SearchLostDocumentFragment : Fragment() {
         rfidViewModel.lostCount.observe(viewLifecycleOwner){
             binding.tvTagLost.text = it.toString()
         }
+
+        rfidViewModel.soundBeep.observe(viewLifecycleOwner){
+            if (it){
+                soundManager.playBeep()
+            }
+        }
         rfidViewModel.foundCount.observe(viewLifecycleOwner){
             binding.tvTagFound.text = it.toString()
         }
-        rfidViewModel.getLostEpc.observe(viewLifecycleOwner){
+        rfidViewModel.getLostEpcDocument.observe(viewLifecycleOwner){
             when (it) {
                 is ResultWrapper.Error -> {
+                    Utils.dismissLoading()
                     Snackbar.make(
                         binding.root,
                         "Terjadi masalah harap hubungi Admin",
@@ -75,6 +93,7 @@ class SearchLostDocumentFragment : Fragment() {
                 }
 
                 is ResultWrapper.ErrorResponse -> {
+                    Utils.dismissLoading()
                     Snackbar.make(binding.root, it.error, Snackbar.LENGTH_LONG)
                         .show()
                     Log.e(TAG, "uploadData: ${it.error}")
@@ -85,11 +104,13 @@ class SearchLostDocumentFragment : Fragment() {
                 }
 
                 is ResultWrapper.Success -> {
+                    Utils.dismissLoading()
                     listLost = it.data.data!!
                     rfidViewModel.addLostTag(listLost)
                 }
 
                 is ResultWrapper.NetworkError -> {
+                    Utils.dismissLoading()
                     Snackbar.make(
                         binding.root,
                         "Jaringan bermasalah, Harap mendekat ke wifi",
@@ -104,14 +125,16 @@ class SearchLostDocumentFragment : Fragment() {
             }
         }
 
-        rfidViewModel.displayedList.observe(viewLifecycleOwner){
-            adapter.submitList(it)
-            listLost = it
-        }
-
         binding.btSend.setOnClickListener {
             rfidViewModel.sendDataLost(listLost,true)
-            rfidViewModel.getLostEpc()
+            rfidViewModel.getLostEpc(true)
+            Utils.showLoading(requireContext())
+        }
+
+        rfidViewModel.displayedList.observe(viewLifecycleOwner){
+            listLost = it
+            adapter.submitList(it)
+
         }
 
         rfidViewModel.postMessage.observe(viewLifecycleOwner){

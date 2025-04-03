@@ -26,11 +26,15 @@ import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.DetailAgunan
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentSearchingAgunanBinding
+import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
+import com.partnership.bjbdocumenttrackerreader.util.Utils
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SearchingAgunanFragment : Fragment() {
-
+    @Inject
+    lateinit var soundManager: BeepSoundManager
     private var isScanning = false
     private val searchViewModel : SearchViewModel by activityViewModels()
     private var _binding: FragmentSearchingAgunanBinding? = null
@@ -62,6 +66,7 @@ class SearchingAgunanFragment : Fragment() {
 
         binding.btScan.setOnClickListener {
             if (isScanning) {
+                searchViewModel.setSoundToFalse()
                 searchViewModel.stopReadTag()
                 searchViewModel.clearFilterReader()
                 updateScanButtonUI(false)
@@ -72,6 +77,7 @@ class SearchingAgunanFragment : Fragment() {
         }
 
         searchViewModel.postMessage.observe(viewLifecycleOwner){result ->
+            Utils.dismissLoading()
             when (result) {
                 is ResultWrapper.Error -> {
                     Snackbar.make(binding.root, "Terjadi masalah harap hubungi Admin", Snackbar.LENGTH_LONG).show()
@@ -98,15 +104,22 @@ class SearchingAgunanFragment : Fragment() {
             }
         }
 
+        searchViewModel.soundBeep.observe(viewLifecycleOwner){
+            if (it){
+                soundManager.playBeep()
+            }
+        }
+
         binding.btSend.setOnClickListener {
             searchViewModel.sendDataSearch(epcToSearch,false)
+            Utils.showLoading(requireContext())
         }
 
         searchViewModel.isFound.observe(viewLifecycleOwner) {
             isFound = it
-            if (it) {
+            if (isFound) {
                 binding.tvStatusItem.text = "Agunan Ditemukan"
-
+                searchViewModel.setSoundToFalse()
                 // Stop scanning via ViewModel
                 searchViewModel.stopReadTag()
                 searchViewModel.clearFilterReader()
@@ -149,6 +162,8 @@ class SearchingAgunanFragment : Fragment() {
         binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
         binding.toolbarScan.setNavigationOnClickListener {
             findNavController().navigateUp()
+            searchViewModel.clearFilterReader()
+            searchViewModel.setNotFound()
         }
     }
 
@@ -186,5 +201,7 @@ class SearchingAgunanFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        Log.e(TAG, "onDestroyView: Searching destroyed", )
+        searchViewModel.setNotFound()
     }
 }

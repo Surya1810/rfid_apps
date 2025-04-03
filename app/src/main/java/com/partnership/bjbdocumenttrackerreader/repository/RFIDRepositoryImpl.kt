@@ -13,7 +13,7 @@ import javax.inject.Inject
 class RFIDRepositoryImpl @Inject constructor(
     private val apiService: ApiService
 ) : RFIDRepository {
-    override suspend fun uploadDataDocument(data: String): ResultWrapper<BaseResponse<Unit>> {
+    override suspend fun uploadDataDocument(data: List<String>): ResultWrapper<BaseResponse<Unit>> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.uploadDataDocument(UploadData(data))
@@ -29,13 +29,12 @@ class RFIDRepositoryImpl @Inject constructor(
                 }
             } catch (e: Exception) {
                 ResultWrapper.Error(e.message ?: "Unknown Error")
-            } catch (e: IOException){
-                ResultWrapper.NetworkError(e.message ?:"Network Error")
             }
         }
     }
 
-    override suspend fun uploadDataAgunan(data: String): ResultWrapper<BaseResponse<Unit>> {
+
+    override suspend fun uploadDataAgunan(data: List<String>): ResultWrapper<BaseResponse<Unit>> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.uploadDataAgunan(UploadData(data))
@@ -75,6 +74,32 @@ class RFIDRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun getListLostDocument(page: Int): ResultWrapper<BaseResponse<List<String>>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getListLostDocument(page)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null) {
+                        ResultWrapper.Success(body)
+                    } else {
+                        ResultWrapper.Error("Response body is null")
+                    }
+                } else {
+                    // Asumsikan ini adalah error dari API → ErrorResponse
+                    ResultWrapper.ErrorResponse("Error response: ${response.errorBody()?.string() ?: "Unknown error"}")
+                }
+            } catch (e: IOException) {
+                // Error jaringan → NetworkError
+                ResultWrapper.NetworkError("Network Error: ${e.localizedMessage}")
+            } catch (e: Exception) {
+                // Error umum sistem → Error
+                ResultWrapper.Error("System Error: ${e.localizedMessage}")
+            }
+        }
+    }
+
 
 
 }

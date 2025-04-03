@@ -27,23 +27,6 @@ class SingleSearchDocumentFragment : Fragment() {
     private lateinit var adapter: SearchAdapter
     private var _binding: FragmentSingleSearchDocumentBinding? = null
     private val binding get() = _binding!!
-    val dummyDocuments = listOf(
-        DocumentDetail(
-            rfidNumber = "02010021",
-            cif = "CIF123456",
-            namaNasabah = "Budi Santoso"
-        ),
-        DocumentDetail(
-            rfidNumber = "02010020",
-            cif = "CIF654321",
-            namaNasabah = "Siti Aminah"
-        ),
-        DocumentDetail(
-            rfidNumber = "02010022",
-            cif = "CIF789012",
-            namaNasabah = "Andi Nugroho"
-        )
-    )
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

@@ -32,16 +32,20 @@ import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.TagInfo
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentScanBinding
+import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
 import com.partnership.bjbdocumenttrackerreader.reader.ReaderKeyEventHandler
 import com.partnership.bjbdocumenttrackerreader.ui.adapter.EpcAdapter
+import com.partnership.bjbdocumenttrackerreader.util.Utils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ScanFragment : Fragment(), ReaderKeyEventHandler {
     private val rfidViewModel: RFIDViewModel by activityViewModels()
     private val scanViewModel: ScanViewModel by viewModels()
 
+    @Inject lateinit var soundManager: BeepSoundManager
     // Deklarasi objek binding
     private var _binding: FragmentScanBinding? = null
     private val binding get() = _binding!!
@@ -84,6 +88,7 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
         binding.btSend.setOnClickListener {
             if (epcList.size >= 1) {
                 uploadData()
+                Utils.showLoading(requireContext())
             } else {
                 Toast.makeText(requireActivity(), "List Kosong! Scan Terlebih dahulu", Toast.LENGTH_SHORT).show()
             }
@@ -104,6 +109,12 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
 
         rfidViewModel.elapsedTime.observe(viewLifecycleOwner){
             binding.tvTime.text = it
+        }
+
+        rfidViewModel.soundBeep.observe(viewLifecycleOwner){
+            if (it){
+                soundManager.playBeep()
+            }
         }
     }
 
@@ -164,6 +175,7 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
     private fun uploadData() {
         scanViewModel.uploadData(epcList, isDocumentSelected)
         scanViewModel.resultUploadData.observe(viewLifecycleOwner) {
+            Utils.dismissLoading()
             when (it) {
                 is ResultWrapper.Error -> {
                     Snackbar.make(
@@ -211,6 +223,7 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
     private fun scanTag(isScanning: Boolean) {
         if (isScanning) {
             rfidViewModel.stopReadTag()
+            rfidViewModel.setSoundToFalse()
             binding.btScan.text = "START"
             binding.btScan.setBackgroundColor(resources.getColor(R.color.md_theme_yellow))
             binding.btClear.isEnabled = true
@@ -244,6 +257,7 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
         }
     }
 
+
     private fun setupToolbar() {
         val activity = (activity as MainActivity)
         activity.setSupportActionBar(binding.toolbarScan)
@@ -272,6 +286,8 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        rfidViewModel.clearTagList()
+        epcList.clear()
     }
 
     override fun myOnKeyDown() {

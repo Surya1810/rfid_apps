@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.partnership.bjbdocumenttrackerreader.data.model.TagInfo
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
+import com.partnership.bjbdocumenttrackerreader.util.RFIDUtils
 import com.partnership.bjbdocumenttrackerreader.util.SingleLiveEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +33,7 @@ class RFIDViewModel @Inject constructor(private val reader: RFIDManager): ViewMo
             }
         }
     }
+
     private val _isReaderInit = MutableLiveData(false)
     val isReaderInit: LiveData<Boolean> get() = _isReaderInit
 
@@ -45,11 +47,18 @@ class RFIDViewModel @Inject constructor(private val reader: RFIDManager): ViewMo
     private val _tagList = MutableLiveData<MutableList<TagInfo>>(mutableListOf())
     val tagList: MutableLiveData<MutableList<TagInfo>> get() = _tagList
 
+    private val _soundBeep = MutableLiveData<Boolean>()
+    val soundBeep : LiveData<Boolean> get() = _soundBeep
+
     private var hasInitReader = false // <- tambahkan flag internal
 
 
     init {
         _isScanning.value = false
+    }
+
+    fun setSoundToFalse(){
+        _soundBeep.value = false
     }
 
     fun initReader(context: Context) {
@@ -101,29 +110,31 @@ class RFIDViewModel @Inject constructor(private val reader: RFIDManager): ViewMo
         reader.releaseRFID()
     }
 
-    fun startLocatingTag(context: Context,epc:String, onResult: (Int, Boolean) -> Unit){
-        viewModelScope.launch {
-            reader.startLocatingTag(context,epc){value,isValid ->
-                onResult(value,isValid)
-            }
-        }
-    }
-
     private fun updateTagList(newTag: TagInfo) {
         val currentList = _tagList.value ?: mutableListOf()
+        val exists = BooleanArray(1)
 
-        val index = currentList.indexOfFirst { it.epc == newTag.epc }
-        if (index != -1) {
-            // Jika tag sudah ada, update nilai RSSI-nya
-            currentList[index] = currentList[index].copy(rssi = newTag.rssi)
+        val insertIndex = RFIDUtils.getInsertIndex(currentList, newTag, exists)
+
+        if (exists[0]) {
+            // Jika tag sudah ada, kita cek dulu apakah RSSI berubah (jika memang masih mau simpan RSSI)
+            val oldTag = currentList[insertIndex]
+            if (oldTag.rssi != newTag.rssi) {
+                // Update hanya kalau benar-benar ada perbedaan
+                currentList[insertIndex] = oldTag.copy(rssi = newTag.rssi)
+                _tagList.postValue(currentList)
+            }
+            // Jika RSSI sama, tidak perlu update apa-apa → hemat performa
         } else {
-            // Jika tag belum ada, tambah tag baru ke dalam list
-            currentList.add(newTag)
+            // Tag baru, tambahkan dan update LiveData
+            currentList.add(insertIndex, newTag)
+            _tagList.postValue(currentList)
+            _soundBeep.postValue(true)
         }
-
-        // Set nilai tagList yang baru setelah update
-        _tagList.postValue(currentList)
     }
+
+
+
 
     private fun formatTime(millis: Long): String {
         val minutes = (millis / 1000) / 60

@@ -2,7 +2,7 @@ package com.partnership.bjbdocumenttrackerreader.data
 
 sealed class ResultWrapper<out T> {
 
-    // Representasi data berhasil diterima
+    // Representasi Data berhasil diterima
     data class Success<out T>(val data: T) : ResultWrapper<T>()
 
     // Representasi error dari API

@@ -33,7 +33,7 @@ object NetworkModule {
             .addInterceptor(loggingInterceptor)
             .connectTimeout(60, TimeUnit.SECONDS)   // waktu maksimum untuk membuat koneksi
             .readTimeout(60, TimeUnit.SECONDS)      // waktu maksimum untuk membaca response
-            .writeTimeout(60, TimeUnit.SECONDS)     // waktu maksimum untuk menulis data ke server
+            .writeTimeout(60, TimeUnit.SECONDS)     // waktu maksimum untuk menulis Data ke server
             .build()
     }
 
