@@ -6,6 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.setupActionBarWithNavController
+import com.partnership.bjbdocumenttrackerreader.MainActivity
 import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentLocatingBinding
 import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
@@ -32,6 +35,7 @@ class LocatingFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentLocatingBinding.inflate(inflater, container, false)
+        setupToolbar()
         return binding.root
     }
 
@@ -41,6 +45,7 @@ class LocatingFragment : Fragment() {
             epc = it.rfid
         }
         binding.btnStartScanRadar.setOnClickListener {
+            reader.setPower(30)
             reader.startLocatingTag(requireContext(),epc){value,valid ->
                 binding.llChart.setData(value)
                 if (valid){
@@ -52,6 +57,19 @@ class LocatingFragment : Fragment() {
         binding.btnStopScanRadar.setOnClickListener {
             reader.stopLocating()
             binding.btnStartScanRadar.isEnabled = true
+        }
+    }
+
+    private fun setupToolbar() {
+        val activity = (activity as MainActivity)
+        activity.setSupportActionBar(binding.toolbarScan)
+        activity.setupActionBarWithNavController(findNavController())
+
+        binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
+        binding.toolbarScan.setNavigationOnClickListener {
+            searchViewModel.clearFilterReader()
+            searchViewModel.setNotFound()
+            findNavController().navigateUp()
         }
     }
 

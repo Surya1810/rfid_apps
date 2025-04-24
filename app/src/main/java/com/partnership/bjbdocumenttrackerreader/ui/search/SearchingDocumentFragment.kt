@@ -5,7 +5,6 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -16,17 +15,19 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.dialog.MaterialDialogs
 import com.google.android.material.snackbar.Snackbar
 import com.partnership.bjbdocumenttrackerreader.MainActivity
 import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.Document
-import com.partnership.bjbdocumenttrackerreader.data.model.DocumentDetail
 import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentSearchingDocumentBinding
 import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
@@ -46,6 +47,7 @@ class SearchingDocumentFragment : Fragment() {
     private lateinit var epcToSearch: String
     private var isFound: Boolean = false
     private lateinit var document: Document
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -97,18 +99,22 @@ class SearchingDocumentFragment : Fragment() {
             lifecycleScope.launch {
                 when(val result = searchViewModel.postLostDocument(PostLostDocument(document.rfid,isFound))){
                     is ResultWrapper.Error<*> -> {
+                        Utils.dismissLoading()
                         Toast.makeText(requireContext(), "Terjadi kesalahan: ${result.error}", Toast.LENGTH_SHORT).show()
                     }
                     is ResultWrapper.ErrorResponse<*> -> {
+                        Utils.dismissLoading()
                         Toast.makeText(requireContext(), "Response error: ${result.error}", Toast.LENGTH_SHORT).show()
                     }
                     ResultWrapper.Loading -> {
 
                     }
                     is ResultWrapper.NetworkError -> {
+                        Utils.dismissLoading()
                         Toast.makeText(requireActivity(), "Terjadi kesalahan pada jaringan, Harap periksa jaringan", Toast.LENGTH_SHORT).show()
                     }
-                    is ResultWrapper.Success<*> -> {
+                    is ResultWrapper.Success -> {
+                        Utils.dismissLoading()
                         Toast.makeText(requireContext(), "Berhasil di update", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -223,7 +229,6 @@ class SearchingDocumentFragment : Fragment() {
         binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
         binding.toolbarScan.setNavigationOnClickListener {
             searchViewModel.clearFilterReader()
-            searchViewModel.setNotFound()
             findNavController().navigateUp()
         }
     }
@@ -231,6 +236,5 @@ class SearchingDocumentFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        searchViewModel.setNotFound()
     }
 }
