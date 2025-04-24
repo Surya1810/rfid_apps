@@ -7,9 +7,13 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import androidx.compose.ui.window.Dialog
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
@@ -24,7 +28,7 @@ import java.util.Locale
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: DashboardViewModel by viewModels()
+    private val viewModel: DashboardViewModel by activityViewModels()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -43,7 +47,7 @@ class HomeFragment : Fragment() {
         }
 
         binding.btScan.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_scanFragment)
+            showDialog()
         }
 
         if (viewModel.dataDashboard.value == null) {
@@ -56,11 +60,13 @@ class HomeFragment : Fragment() {
         }
 
         binding.btSearchAgunan.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_searchAgunanFragment)
+            findNavController().navigate(R.id.action_homeFragment_to_searchDocumentFragment)
+            viewModel.setIsDocument(false)
         }
 
         binding.btSearchDocument.setOnClickListener {
             findNavController().navigate(R.id.action_homeFragment_to_searchDocumentFragment)
+            viewModel.setIsDocument(true)
         }
 
         viewModel.dataDashboard.observe(viewLifecycleOwner) {
@@ -114,6 +120,32 @@ class HomeFragment : Fragment() {
             this.adapter = adapter
         }
     }
+
+    private fun showDialog() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_select_type, null)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .setTitle("Pilih Tipe Dokumen")
+            .create()
+
+        dialog.show() // tampilkan dulu, baru findViewById dari dialog
+
+        val btnDocument = dialog.findViewById<Button>(R.id.btnDocument)
+        val btnAgunan = dialog.findViewById<Button>(R.id.btnAgunan)
+
+        btnDocument?.setOnClickListener {
+            viewModel.setIsDocument(true)
+            findNavController().navigate(R.id.action_homeFragment_to_scanFragment)
+            dialog.dismiss() // tutup dialog setelah aksi
+        }
+
+        btnAgunan?.setOnClickListener {
+            viewModel.setIsDocument(false)
+            findNavController().navigate(R.id.action_homeFragment_to_scanFragment)
+            dialog.dismiss()
+        }
+    }
+
 
 
     fun setData(dashboardData: GetDashboard){

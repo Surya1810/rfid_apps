@@ -9,16 +9,13 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupActionBarWithNavController
 import com.partnership.bjbdocumenttrackerreader.reader.ReaderKeyEventHandler
-import com.partnership.bjbdocumenttrackerreader.ui.scan.RFIDViewModel
+import com.partnership.bjbdocumenttrackerreader.ui.scan.StockOpnameViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private val viewModel : RFIDViewModel by viewModels()
+    private val viewModel : StockOpnameViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

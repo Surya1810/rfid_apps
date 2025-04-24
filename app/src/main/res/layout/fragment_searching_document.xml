@@ -29,7 +29,6 @@
             app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
 
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -67,12 +66,13 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView7" >
+
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/cardDocument"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="16dp"
-                android:background="@color/md_theme_primary">
+                android:background="@color/md_theme_primary"
+                android:padding="16dp">
 
                 <TextView
                     android:id="@+id/textView15"
@@ -88,9 +88,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="02010024"
+                    android:textColor="@color/white"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="@color/white"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/textView15" />
 
@@ -98,7 +98,7 @@
                     android:id="@+id/textView19"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="CIF"
+                    android:text="Nomor Dokumen"
                     android:textColor="@color/white"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -158,9 +158,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
-            android:layout_marginBottom="24dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
             android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/lyLocating"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
 
@@ -181,7 +183,43 @@
                 android:layout_marginHorizontal="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/md_theme_yellow"
-                android:text="SEND"
+                android:text="UPDATE"
+                android:textColor="@color/md_theme_primary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:visibility="visible"
+            android:id="@+id/lyLocating"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="32dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btRadar"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@color/md_theme_yellow"
+                android:text="Cari Di Radar"
+                android:textColor="@color/md_theme_primary" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btLocating"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@color/md_theme_yellow"
+                android:text="Cari Lokasi Dokumen"
                 android:textColor="@color/md_theme_primary" />
         </LinearLayout>
 
@@ -223,7 +261,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="3. Lalu tekan send untuk update status di database"/>
+                android:text="3. Lalu tekan update untuk update status di database"/>
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

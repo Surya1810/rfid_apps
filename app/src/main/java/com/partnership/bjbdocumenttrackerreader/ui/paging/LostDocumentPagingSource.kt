@@ -37,7 +37,7 @@ class LostDocumentPagingSource(
                 is ResultWrapper.ErrorResponse -> LoadResult.Error(Exception("API Error: ${result.error}"))
                 is ResultWrapper.Error -> LoadResult.Error(Exception("System Error: ${result.error}"))
                 is ResultWrapper.NetworkError -> LoadResult.Error(Exception("Network Error: ${result.error}"))
-                is ResultWrapper.Loading -> LoadResult.Invalid() // bisa disesuaikan, meskipun jarang dipakai di paging
+                is ResultWrapper.Loading -> LoadResult.Invalid()
             }
 
         } catch (e: Exception) {

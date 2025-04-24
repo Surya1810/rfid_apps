@@ -27,9 +27,6 @@
             android:id="@+id/action_homeFragment_to_searchDocumentFragment"
             app:destination="@id/searchDocumentFragment" />
         <action
-            android:id="@+id/action_homeFragment_to_searchAgunanFragment"
-            app:destination="@id/searchAgunanFragment" />
-        <action
             android:id="@+id/action_homeFragment_to_listLostFragment"
             app:destination="@id/listLostFragment" />
     </fragment>
@@ -55,17 +52,9 @@
         <action
             android:id="@+id/action_searchingDocumentFragment_to_settingReaderFragment"
             app:destination="@id/settingReaderFragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/searchAgunanFragment"
-        android:name="com.partnership.bjbdocumenttrackerreader.ui.search.SearchAgunanFragment"
-        android:label="Search Agunan" >
         <action
-            android:id="@+id/action_searchAgunanFragment_to_searchingAgunanFragment"
-            app:destination="@id/searchingAgunanFragment" />
-        <action
-            android:id="@+id/action_searchAgunanFragment_to_settingReaderFragment"
-            app:destination="@id/settingReaderFragment" />
+            android:id="@+id/action_searchingDocumentFragment_to_locatingFragment"
+            app:destination="@id/locatingFragment" />
     </fragment>
     <fragment
         android:id="@+id/searchDocumentFragment"
@@ -79,16 +68,13 @@
             app:destination="@id/settingReaderFragment" />
     </fragment>
     <fragment
-        android:id="@+id/searchingAgunanFragment"
-        android:name="com.partnership.bjbdocumenttrackerreader.ui.search.SearchingAgunanFragment"
-        android:label="Searching Agunan" >
-        <action
-            android:id="@+id/action_searchingAgunanFragment_to_settingReaderFragment"
-            app:destination="@id/settingReaderFragment" />
-    </fragment>
-    <fragment
         android:id="@+id/listLostFragment"
         android:name="com.partnership.bjbdocumenttrackerreader.ui.home.ListLostFragment"
         android:label="fragment_list_lost"
         tools:layout="@layout/fragment_list_lost" />
+    <fragment
+        android:id="@+id/locatingFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.search.LocatingFragment"
+        android:label="fragment_locating"
+        tools:layout="@layout/fragment_locating" />
 </navigation>

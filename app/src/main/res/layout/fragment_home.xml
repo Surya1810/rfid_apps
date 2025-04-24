@@ -189,7 +189,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:backgroundTint="@color/md_theme_yellow"
-                                android:text="SCAN"
+                                android:text="Stock Opname"
                                 android:textColor="@color/md_theme_primary"
                                 app:icon="@drawable/barcode_reader_24px"
                                 app:iconTint="@color/md_theme_primary" />

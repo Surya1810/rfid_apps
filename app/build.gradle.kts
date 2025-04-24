@@ -58,8 +58,8 @@ dependencies {
     implementation ("androidx.compose.ui:ui-graphics:1.3.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+    implementation("com.google.dagger:hilt-android:2.56.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.56.1")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
@@ -68,6 +68,11 @@ dependencies {
     implementation("androidx.navigation:navigation-dynamic-features-fragment:2.8.8")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01")
     implementation ("androidx.paging:paging-runtime:3.2.1")
+
+    implementation("androidx.room:room-runtime:2.7.0")
+    implementation("androidx.room:room-paging:2.7.0")
+
+    kapt("androidx.room:room-compiler:2.7.0")
 }
 
 kapt {

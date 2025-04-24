@@ -18,17 +18,21 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.snackbar.Snackbar
 import com.partnership.bjbdocumenttrackerreader.MainActivity
 import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
+import com.partnership.bjbdocumenttrackerreader.data.model.Document
 import com.partnership.bjbdocumenttrackerreader.data.model.DocumentDetail
+import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentSearchingDocumentBinding
 import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
 import com.partnership.bjbdocumenttrackerreader.util.Utils
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -41,6 +45,7 @@ class SearchingDocumentFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var epcToSearch: String
     private var isFound: Boolean = false
+    private lateinit var document: Document
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -63,8 +68,9 @@ class SearchingDocumentFragment : Fragment() {
 
         searchViewModel.searchDocumentEpc.observe(viewLifecycleOwner){
             setDataToView(it)
-            searchViewModel.setEpcFilter(it.rfidNumber)
-            epcToSearch = it.rfidNumber
+            document =it
+            searchViewModel.setEpcFilter(it.rfid)
+            epcToSearch = it.rfid
         }
 
         searchViewModel.isScanning.observe(viewLifecycleOwner){
@@ -81,9 +87,33 @@ class SearchingDocumentFragment : Fragment() {
                 updateScanButtonUI(true)
             }
         }
+
+        binding.btLocating.setOnClickListener {
+            findNavController().navigate(R.id.action_searchingDocumentFragment_to_locatingFragment)
+        }
         binding.btSend.setOnClickListener {
             Utils.showLoading(requireContext())
-            searchViewModel.sendDataSearch(epcToSearch,true)
+            // kirim data
+            lifecycleScope.launch {
+                when(val result = searchViewModel.postLostDocument(PostLostDocument(document.rfid,isFound))){
+                    is ResultWrapper.Error<*> -> {
+                        Toast.makeText(requireContext(), "Terjadi kesalahan: ${result.error}", Toast.LENGTH_SHORT).show()
+                    }
+                    is ResultWrapper.ErrorResponse<*> -> {
+                        Toast.makeText(requireContext(), "Response error: ${result.error}", Toast.LENGTH_SHORT).show()
+                    }
+                    ResultWrapper.Loading -> {
+
+                    }
+                    is ResultWrapper.NetworkError -> {
+                        Toast.makeText(requireActivity(), "Terjadi kesalahan pada jaringan, Harap periksa jaringan", Toast.LENGTH_SHORT).show()
+                    }
+                    is ResultWrapper.Success<*> -> {
+                        Toast.makeText(requireContext(), "Berhasil di update", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
         }
 
         searchViewModel.postMessage.observe(viewLifecycleOwner){result ->
@@ -109,10 +139,10 @@ class SearchingDocumentFragment : Fragment() {
                     Snackbar.make(binding.root, "Jaringan bermasalah, Harap mendekat ke wifi", Snackbar.LENGTH_LONG)
                         .setAction("Baik") {}
                         .show()
-                    Log.e(TAG, "uploadData: ${result.error}")
                 }
             }
         }
+
         searchViewModel.isFound.observe(viewLifecycleOwner) {
             isFound = it
             if (isScanning) {
@@ -121,18 +151,21 @@ class SearchingDocumentFragment : Fragment() {
                 searchViewModel.stopReadTag()
                 searchViewModel.clearFilterReader()
 
-                // Update UI ke kondisi START lagi
                 updateScanButtonUI(isScanning = false)
-
+                if (it){
+                    binding.lyLocating.visibility = View.VISIBLE
+                }else{
+                    binding.lyLocating.visibility = View.GONE
+                }
             }
         }
     }
 
-    private fun setDataToView(documentDetail: DocumentDetail){
+    private fun setDataToView(document: Document){
         binding.apply {
-            tvEpc.text = documentDetail.rfidNumber
-            tvCIF.text = documentDetail.cif
-            tvName.text = documentDetail.namaNasabah
+            tvEpc.text = document.rfid
+            tvCIF.text = document.cif
+            tvName.text = document.name
         }
     }
 

@@ -6,16 +6,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.slider.RangeSlider
 import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentSettingReaderBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class SettingReaderFragment : Fragment() {
-    private val viewModel : RFIDViewModel by activityViewModels()
+    private val viewModel : StockOpnameViewModel by activityViewModels()
     private var _binding: FragmentSettingReaderBinding? = null
     private val binding get() = _binding!!
 

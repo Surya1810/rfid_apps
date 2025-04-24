@@ -40,6 +40,9 @@ class RFIDManager {
             false
         }
     }
+    fun stopLocating(){
+        rfid?.stopLocation()
+    }
 
     fun readSingleTag(onTagRead: (TagInfo?) -> Unit) {
         rfid = RFIDWithUHFUART.getInstance()

@@ -1,7 +1,6 @@
 package com.partnership.bjbdocumenttrackerreader.ui.scan
 
 import android.content.ContentValues.TAG
-import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
@@ -13,7 +12,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -22,6 +20,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -33,96 +32,139 @@ import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.TagInfo
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentScanBinding
 import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
+import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
 import com.partnership.bjbdocumenttrackerreader.reader.ReaderKeyEventHandler
-import com.partnership.bjbdocumenttrackerreader.ui.adapter.EpcAdapter
+import com.partnership.bjbdocumenttrackerreader.ui.adapter.DocumentAdapter
+import com.partnership.bjbdocumenttrackerreader.ui.adapter.SoDocumentAdapter
+import com.partnership.bjbdocumenttrackerreader.ui.home.DashboardViewModel
 import com.partnership.bjbdocumenttrackerreader.util.Utils
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.properties.Delegates
 
 @AndroidEntryPoint
 class ScanFragment : Fragment(), ReaderKeyEventHandler {
-    private val rfidViewModel: RFIDViewModel by activityViewModels()
-    private val scanViewModel: ScanViewModel by viewModels()
+
+    private val stockOpnameViewModel: StockOpnameViewModel by viewModels()
+    private val dashboardViewModel : DashboardViewModel by activityViewModels()
 
     @Inject lateinit var soundManager: BeepSoundManager
-    // Deklarasi objek binding
+    private var isDocument : Boolean = true
+    @Inject lateinit var reader: RFIDManager
     private var _binding: FragmentScanBinding? = null
+    private var message = ""
     private val binding get() = _binding!!
-    private lateinit var epcAdapter: EpcAdapter
-    private var isDocumentSelected: Boolean = true
+    private lateinit var assetAdapter : SoDocumentAdapter
     private var epcList = mutableListOf<TagInfo>()
-    private var isScanning: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // Inisialisasi binding
         _binding = FragmentScanBinding.inflate(inflater, container, false)
-
         setupToolbar()
-        setupToggleButton()
         return binding.root
     }
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        rfidViewModel.initReader(requireActivity())
         setUpMenu()
         setupRecyclerView()
 
-        rfidViewModel.isScanning.observe(viewLifecycleOwner){
-            isScanning = it
-        }
-
         binding.btScan.setOnClickListener {
-            scanTag(isScanning)
-        }
-
-        binding.btClear.setOnClickListener {
-            clearTagList(isScanning)
-        }
-
-        binding.btSend.setOnClickListener {
-            if (epcList.size >= 1) {
-                uploadData()
-                Utils.showLoading(requireContext())
-            } else {
-                Toast.makeText(requireActivity(), "List Kosong! Scan Terlebih dahulu", Toast.LENGTH_SHORT).show()
-            }
-            rfidViewModel.elapsedTime.observe(viewLifecycleOwner) {
-                binding.tvTime.text = it
+            val isScanning = reader.isInventorying()
+            if (isScanning != null) {
+                scanTag(isScanning)
             }
         }
 
-        rfidViewModel.tagList.observe(viewLifecycleOwner) { tagList ->
-            epcList = tagList
-            binding.tvTotalTagNumber.text = tagList.size.toString()
-            rfidViewModel.isScanning.observe(viewLifecycleOwner) {
-                if (it) {
-                    epcAdapter.updateData(epcList)
+        dashboardViewModel.isDocumentSelected.observe(viewLifecycleOwner){
+            isDocument = it
+            lifecycleScope.launch {
+                when(val result = stockOpnameViewModel.getBulkDocument(it)){
+                    is ResultWrapper.Error -> {
+                        Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT).show()
+                    }
+                    is ResultWrapper.ErrorResponse -> {
+                        Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT).show()
+                    }
+                    ResultWrapper.Loading -> {
+
+                    }
+                    is ResultWrapper.NetworkError -> {
+                        Toast.makeText(requireActivity(), "Terjadi kesalahan pada jaringan, Harap periksa jaringan", Toast.LENGTH_SHORT).show()
+                    }
+                    is ResultWrapper.Success -> {
+                        stockOpnameViewModel.cacheAllValidEpcs()
+                    }
                 }
             }
         }
 
-        rfidViewModel.elapsedTime.observe(viewLifecycleOwner){
-            binding.tvTime.text = it
+        binding.btSend.setOnClickListener {
+            lifecycleScope.launch {
+                when(val result = stockOpnameViewModel.postStockOpname(isDocument)){
+                    is ResultWrapper.Error -> {
+                        Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT).show()
+                    }
+                    is ResultWrapper.ErrorResponse -> {
+                        Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT).show()
+                    }
+                    ResultWrapper.Loading -> {
+
+                    }
+                    is ResultWrapper.NetworkError -> {
+                        Toast.makeText(requireActivity(), "Terjadi kesalahan pada jaringan, Harap periksa jaringan", Toast.LENGTH_SHORT).show()
+                    }
+                    is ResultWrapper.Success -> {
+                        Toast.makeText(requireActivity(), "Stock Opname Berhasil", Toast.LENGTH_SHORT).show()
+                        findNavController().navigateUp()
+                    }
+                }
+            }
         }
 
-        rfidViewModel.soundBeep.observe(viewLifecycleOwner){
+        stockOpnameViewModel.elapsedTime.observe(viewLifecycleOwner){
+            binding.tvTimeScanning.text = it
+        }
+
+        stockOpnameViewModel.soundBeep.observe(viewLifecycleOwner){
             if (it){
                 soundManager.playBeep()
+            }
+        }
+        lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                stockOpnameViewModel.assetStatusInfo.collect { (detected, total) ->
+                    binding.tvDetected.text = detected.toString()
+                    val missing = total - detected
+                    binding.tvUndetected.text = missing.toString()
+                    message = if (total - detected == 0) {
+                        "Kirim data stock opname?"
+                    } else {
+                        "Terdapat $missing barang yang tidak ditemukan. Apakah Anda ingin memeriksa kembali atau tetap mengirim data stock opname?"
+                    }
+                }
+            }
+        }
+        stockOpnameViewModel.observeScannedTags()
+
+        lifecycleScope.launch {
+            stockOpnameViewModel.pagedAssets.collectLatest {pagingData ->
+                assetAdapter.submitData(pagingData)
             }
         }
     }
 
     private fun setupRecyclerView() {
-        epcAdapter = EpcAdapter(epcList)
+        assetAdapter = SoDocumentAdapter(){
+
+        }
         binding.rvEpc.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = epcAdapter
+            adapter = assetAdapter
         }
     }
 
@@ -137,8 +179,8 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.readerSetting -> {
-                        val isScanning = rfidViewModel.isScanning.value ?: false
-                        if (isScanning) {
+                        val isScanning = reader.isInventorying()
+                        if (isScanning == true) {
                             Toast.makeText(
                                 requireActivity(),
                                 "Hentikan Scan Terlebih Dahulu!",
@@ -157,106 +199,23 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
-    private fun setButtonState(
-        button: MaterialButton,
-        isActive: Boolean,
-        primaryColor: Int,
-        defaultColor: Int
-    ) {
-        if (isActive) {
-            button.setBackgroundColor(primaryColor)
-            button.setTextColor(Color.WHITE)
-        } else {
-            button.setBackgroundColor(defaultColor)
-            button.setTextColor(Color.BLACK)
-        }
-    }
-
-    private fun uploadData() {
-        scanViewModel.uploadData(epcList, isDocumentSelected)
-        scanViewModel.resultUploadData.observe(viewLifecycleOwner) {
-            Utils.dismissLoading()
-            when (it) {
-                is ResultWrapper.Error -> {
-                    Snackbar.make(
-                        binding.root,
-                        "Terjadi masalah harap hubungi Admin",
-                        Snackbar.LENGTH_LONG
-                    )
-                        .show()
-                    Log.e(TAG, "uploadData: ${it.error}")
-                }
-
-                is ResultWrapper.ErrorResponse -> {
-                    Snackbar.make(binding.root, it.error, Snackbar.LENGTH_LONG)
-                        .show()
-                    Log.e(TAG, "uploadData: ${it.error}")
-                }
-
-                ResultWrapper.Loading -> {
-
-                }
-
-                is ResultWrapper.Success -> {
-                    it.data.message?.let { it1 ->
-                        Snackbar.make(binding.root, it1, Snackbar.LENGTH_LONG)
-                            .show()
-                    }
-                }
-
-                is ResultWrapper.NetworkError -> {
-                    Snackbar.make(
-                        binding.root,
-                        "Jaringan bermasalah, Harap mendekat ke wifi",
-                        Snackbar.LENGTH_LONG
-                    )
-                        .setAction("Baik") {
-
-                        }
-                        .show()
-                    Log.e(TAG, "uploadData: ${it.error}")
-                }
-            }
-        }
-    }
-
     private fun scanTag(isScanning: Boolean) {
         if (isScanning) {
-            rfidViewModel.stopReadTag()
-            rfidViewModel.setSoundToFalse()
+            stockOpnameViewModel.stopReadTag()
+            stockOpnameViewModel.setSoundToFalse()
             binding.btScan.text = "START"
             binding.btScan.setBackgroundColor(resources.getColor(R.color.md_theme_yellow))
-            binding.btClear.isEnabled = true
-            binding.btClear.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.md_theme_yellow))
             binding.btSend.isEnabled = true
             binding.btSend.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.md_theme_yellow))
-            binding.tvTime.text = "00:00"
+            binding.tvTimeScanning.text = "00:00"
         } else {
-            rfidViewModel.readTagAuto()
+            stockOpnameViewModel.readTagAuto2()
             binding.btScan.text = "STOP"
             binding.btScan.setBackgroundColor(Color.RED)
-            binding.btClear.isEnabled = false
-            binding.btClear.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.md_theme_outlineVariant))
             binding.btSend.isEnabled = false
             binding.btSend.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.md_theme_outlineVariant))
         }
     }
-
-    private fun clearTagList(isScanning: Boolean){
-        if (isScanning){
-            Toast.makeText(
-                requireActivity(),
-                "Hentikan scan terlebih dahulu",
-                Toast.LENGTH_SHORT
-            ).show()
-        }else{
-            rfidViewModel.clearTagList()
-            binding.tvTotalTagNumber.text = "0"
-            epcList.clear()
-            epcAdapter.updateData(epcList)
-        }
-    }
-
 
     private fun setupToolbar() {
         val activity = (activity as MainActivity)
@@ -269,29 +228,18 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
         }
     }
 
-    private fun setupToggleButton() {
-        val primaryColor = ContextCompat.getColor(requireContext(), R.color.md_theme_primary)
-        val defaultColor = ContextCompat.getColor(requireContext(), R.color.md_theme_outlineVariant)
-
-        binding.toggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) {
-                isDocumentSelected = checkedId == binding.btnDocument.id
-
-                setButtonState(binding.btnDocument, isDocumentSelected, primaryColor, defaultColor)
-                setButtonState(binding.btnAgunan, !isDocumentSelected, primaryColor, defaultColor)
-            }
-        }
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        rfidViewModel.clearTagList()
         epcList.clear()
     }
 
     override fun myOnKeyDown() {
-        scanTag(isScanning)
+        val isScanning = reader.isInventorying()
+        if (isScanning != null) {
+            scanTag(isScanning)
+        }
     }
 
     override fun myOnKeyUp() {

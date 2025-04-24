@@ -6,22 +6,26 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.partnership.bjbdocumenttrackerreader.R
-import com.partnership.bjbdocumenttrackerreader.data.model.Document
+import com.partnership.bjbdocumenttrackerreader.data.local.entity.AssetEntity
 import com.partnership.bjbdocumenttrackerreader.databinding.RvDocumentBinding
 
-class SearchAdapter(
-    private val onItemClick: (Document) -> Unit
-) : ListAdapter<Document, SearchAdapter.SearchViewHolder>(DiffCallback) {
+class SoDocumentAdapter(
+    private val onItemClick: (AssetEntity) -> Unit
+) : PagingDataAdapter<AssetEntity, SoDocumentAdapter.SoDocumentViewHolder>(DiffCallback) {
 
-    inner class SearchViewHolder(val binding: RvDocumentBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: Document) {
+    inner class SoDocumentViewHolder(private val binding: RvDocumentBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: AssetEntity?) {
+            item ?: return // null check, penting untuk Paging!
+
             binding.tvEpc.text = item.rfid
             binding.tvCIF.text = item.noDoc
             binding.tvName.text = item.name
+
             binding.linearLayout3.apply {
                 if (item.segment == null){
                     binding.tvSegment.visibility = View.GONE
@@ -49,33 +53,31 @@ class SearchAdapter(
 
                 getChildAt(2)?.let { (it as TextView).text = status }
             }
+
             binding.cardDocument.setOnClickListener {
                 onItemClick(item)
             }
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SearchViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SoDocumentViewHolder {
         val binding = RvDocumentBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return SearchViewHolder(binding)
+        return SoDocumentViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: SearchViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: SoDocumentViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
     companion object {
-        val DiffCallback = object : DiffUtil.ItemCallback<Document>() {
-            override fun areItemsTheSame(oldItem: Document, newItem: Document): Boolean {
-                // Bandingkan ID unik jika ada, misalnya epc sebagai identifier
-                return oldItem.id == newItem.id
+        val DiffCallback = object : DiffUtil.ItemCallback<AssetEntity>() {
+            override fun areItemsTheSame(oldItem: AssetEntity, newItem: AssetEntity): Boolean {
+                return oldItem.id == newItem.id && oldItem.rfid == newItem.rfid
             }
 
-            override fun areContentsTheSame(oldItem: Document, newItem: Document): Boolean {
+            override fun areContentsTheSame(oldItem: AssetEntity, newItem: AssetEntity): Boolean {
                 return oldItem == newItem
             }
         }
     }
 }
-
-

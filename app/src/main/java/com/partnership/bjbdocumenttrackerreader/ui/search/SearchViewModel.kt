@@ -16,8 +16,10 @@ import com.partnership.bjbdocumenttrackerreader.data.model.ItemStatus
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
 import com.partnership.bjbdocumenttrackerreader.repository.SearchRepositoryImpl
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
-import com.partnership.bjbdocumenttrackerreader.data.model.Data
 import com.partnership.bjbdocumenttrackerreader.data.model.DetailAgunan
+import com.partnership.bjbdocumenttrackerreader.data.model.Document
+import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
+import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepositoryImpl
 import com.partnership.rfid.data.model.UploadData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -25,50 +27,20 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class SearchViewModel @Inject constructor(private val repository: SearchRepositoryImpl, private val reader: RFIDManager): ViewModel() {
-
-    private val _elapsedTime = MutableLiveData<String>()
-    val elapsedTime: LiveData<String> get() = _elapsedTime
-    private var startTime: Long = 0L
-    private var isRunning = false
-    private val handler = Handler(Looper.getMainLooper())
-
-    private val timerRunnable = object : Runnable {
-        override fun run() {
-            if (isRunning) {
-                val elapsed = System.currentTimeMillis() - startTime
-                _elapsedTime.postValue(formatTime(elapsed))
-                handler.postDelayed(this, 1000) // Update tiap 1 detik
-            }
-        }
-    }
+class SearchViewModel @Inject constructor(private val repository: RFIDRepositoryImpl, private val reader: RFIDManager): ViewModel() {
 
     private val _soundBeep = MutableLiveData<Boolean>()
     val soundBeep : LiveData<Boolean> get() = _soundBeep
 
-    private val _setDataToSearchingAgunan = MutableLiveData<DetailAgunan>()
-    val searchAgunanEpc: LiveData<DetailAgunan> get() = _setDataToSearchingAgunan
+    private val _setDataToSearchingDocument = MutableLiveData<Document>()
+    val searchDocumentEpc : LiveData<Document> get() = _setDataToSearchingDocument
 
-    private val _setDataToSearchingDocument = MutableLiveData<DocumentDetail>()
-    val searchDocumentEpc : LiveData<DocumentDetail> get() = _setDataToSearchingDocument
-
-    private val _getLostDocument = MutableLiveData<ResultWrapper<BaseResponse<List<ItemStatus>>>>()
-    val getLostEpcDocument : LiveData<ResultWrapper<BaseResponse<List<ItemStatus>>>> get() = _getLostDocument
-
-    private val _getLostAgunan = MutableLiveData<ResultWrapper<BaseResponse<List<ItemStatus>>>>()
-    val getLostEpcAgunan : LiveData<ResultWrapper<BaseResponse<List<ItemStatus>>>> get() = _getLostAgunan
+    fun setDataToSearchingDocument(document: Document){
+        _setDataToSearchingDocument.value = document
+    }
 
     private val _isScanning = MutableLiveData<Boolean>()
     val isScanning: LiveData<Boolean> get() = _isScanning
-
-    private val _displayedList = MutableLiveData<List<ItemStatus>>()
-    val displayedList: LiveData<List<ItemStatus>> get() = _displayedList
-
-    private val _listSearchDocument = MutableLiveData<ResultWrapper<BaseResponse<List<DocumentDetail>>>>()
-    val listSearchDocument : LiveData<ResultWrapper<BaseResponse<List<DocumentDetail>>>> get() = _listSearchDocument
-
-    private val _listSearchAgunan = MutableLiveData<ResultWrapper<BaseResponse<List<DetailAgunan>>>>()
-    val listSearchAgunan : LiveData<ResultWrapper<BaseResponse<List<DetailAgunan>>>> get() = _listSearchAgunan
 
     private val _postMessage = MutableLiveData<ResultWrapper<BaseResponse<Unit>>>()
     val postMessage : LiveData<ResultWrapper<BaseResponse<Unit>>> get() = _postMessage
@@ -80,20 +52,12 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
         _isFound.value = false
     }
 
+    suspend fun postLostDocument(postLostDocument: PostLostDocument): ResultWrapper<BaseResponse<Unit>> {
+        return repository.postLostDocument(postLostDocument)
+    }
+
     fun setNotFound(){
         _isFound.value = false
-    }
-
-    fun getListSearchDocument(search: String){
-        viewModelScope.launch {
-            _listSearchDocument.value = repository.getSearchDocument(search)
-        }
-    }
-
-    fun getListSearchAgunan(search: String){
-        viewModelScope.launch {
-            _listSearchAgunan.postValue(repository.getSearchAgunan(search))
-        }
     }
 
     fun setEpcFilter(data: String): Boolean{
@@ -101,64 +65,8 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
         return true
     }
 
-    fun setDataDocumentSearch(documentDetail: DocumentDetail){
-        _setDataToSearchingDocument.value = documentDetail
-    }
-
-    fun setDataAgunanSearch(agunanDetail: DetailAgunan){
-        _setDataToSearchingAgunan.value = agunanDetail
-    }
-    fun sendDataLost(lostTags: List<ItemStatus>,isDocument: Boolean) {
-        val foundTagsList = lostTags
-            .filter { it.isThere }
-            .joinToString(separator = ",") { it.epc }
-        if (isDocument){
-            viewModelScope.launch {
-                val result = repository.postLostDocument(Data(foundTagsList))
-                _postMessage.postValue(result)
-            }
-        }else{
-            viewModelScope.launch {
-                val result =  repository.postLostAgunan(Data(foundTagsList))
-                _postMessage.postValue(result)
-            }
-        }
-    }
-
-    fun sendDataSearch(epc: String, isDocument: Boolean) {
-        if (isDocument){
-            viewModelScope.launch {
-                val result = repository.postSearchDocument(Data(epc))
-                _postMessage.postValue(result)
-                Log.d("SendSearch", "Document Result: $result")
-            }
-        } else {
-            viewModelScope.launch {
-                val result = repository.postSearchAgunan(Data(epc))
-                _postMessage.postValue(result)
-                Log.d("SendSearch", "Agunan Result: $result")
-            }
-        }
-    }
-
     fun clearFilterReader(){
         reader.disableFilter()
-    }
-
-    val foundCount: LiveData<Int> = MediatorLiveData<Int>().apply {
-        addSource(_displayedList) { list ->
-            value = list.count { it.isThere }
-        }
-    }
-
-    val lostCount: LiveData<Int> = MediatorLiveData<Int>().apply {
-        addSource(_displayedList) { list ->
-            value = list.count { !it.isThere }
-        }
-    }
-
-    fun addLostTag(lostTags : List<ItemStatus>){
-        _displayedList.postValue(lostTags)
     }
 
     fun searchSingleTag(epc: String){
@@ -172,62 +80,9 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
         }
     }
 
-    fun setSoundToFalse(){
-        _soundBeep.value = false
-    }
-
-    fun readTagAuto(){
-        _isScanning.value = true
-        startTimer()
-        reader.readTagAuto {uhftagInfo ->
-            val newTag = ItemStatus(
-                epc = uhftagInfo.epc,
-                isThere = true
-            )
-            updateTagList(newTag)
-        }
-    }
-
-    fun getLostEpc(isDocument: Boolean){
-        if (isDocument){
-            viewModelScope.launch {
-                _getLostDocument.value = repository.getLostDocument()
-            }
-        }else{
-            viewModelScope.launch {
-                _getLostAgunan.value = repository.getLostAgunan()
-            }
-        }
-
-    }
-
     fun stopReadTag(){
         _isScanning.value = false
-        stopTimer()
         reader.stopReadTag()
-    }
-
-    private fun updateTagList(scannedTag: ItemStatus) {
-        val currentList = _displayedList.value?.toMutableList() ?: mutableListOf()
-
-        val index = currentList.indexOfFirst { it.epc == scannedTag.epc }
-
-        if (index != -1) {
-            val item = currentList[index]
-            if (!item.isThere) {
-                currentList[index] = item.copy(isThere = true)
-                _displayedList.postValue(currentList)
-                _soundBeep.postValue(true)
-            }
-        }
-    }
-
-    private fun startTimer() {
-        if (!isRunning) {
-            isRunning = true
-            startTime = System.currentTimeMillis()
-            handler.post(timerRunnable)
-        }
     }
 
     private fun formatTime(millis: Long): String {
@@ -236,8 +91,4 @@ class SearchViewModel @Inject constructor(private val repository: SearchReposito
         return String.format("%02d:%02d", minutes, seconds)
     }
 
-    private fun stopTimer() {
-        isRunning = false
-        handler.removeCallbacks(timerRunnable)
-    }
 }
