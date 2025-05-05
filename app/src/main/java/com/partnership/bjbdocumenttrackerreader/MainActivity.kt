@@ -9,9 +9,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
+import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
 import com.partnership.bjbdocumenttrackerreader.reader.ReaderKeyEventHandler
 import com.partnership.bjbdocumenttrackerreader.ui.scan.StockOpnameViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {

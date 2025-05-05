@@ -73,7 +73,7 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setUpMenu()
+        //setUpMenu()
         setupRecyclerView()
 
         binding.btScan.setOnClickListener {
@@ -214,7 +214,7 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
         }
     }
 
-    private fun setUpMenu() {
+   /* private fun setUpMenu() {
         val menuHost: MenuHost = requireActivity()
 
         menuHost.addMenuProvider(object : MenuProvider {
@@ -243,7 +243,7 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
                 }
             }
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
-    }
+    }*/
 
     private fun scanTag(isScanning: Boolean) {
         if (isScanning) {
@@ -278,6 +278,8 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
         val activity = (activity as MainActivity)
         activity.setSupportActionBar(binding.toolbarScan)
         activity.setupActionBarWithNavController(findNavController())
+
+        binding.toolbarScan.setTitle(if (isDocument) "Stock Opname Dokumen" else "Stock Opname Agunan")
 
         binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
         binding.toolbarScan.setNavigationOnClickListener {

@@ -21,7 +21,6 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/md_theme_primary"
-            app:menu="@menu/reader_setting"
             app:navigationIcon="@drawable/arrow_back_ios_24px"
             app:title="Stock Opname"
             app:elevation="0dp"

@@ -22,11 +22,26 @@
             android:layout_height="?attr/actionBarSize"
             android:background="@color/md_theme_primary"
             app:navigationIcon="@drawable/arrow_back_ios_24px"
-            app:title="Searching"
+            app:title="Cari Lokasi"
             app:elevation="0dp"
             android:elevation="0dp"
             app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
+    <TextView
+        android:layout_marginTop="16dp"
+        android:id="@+id/tvDocumentName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        android:text="Nama Dokumen"/>
+    <TextView
+        android:id="@+id/tvEpc"
+        android:textSize="18sp"
+        android:textAlignment="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="81391832923"/>
     <LinearLayout
         android:padding="16dp"
         android:layout_width="match_parent"

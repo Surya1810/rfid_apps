@@ -44,6 +44,8 @@ class LocatingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         stockOpnameViewModel.searchDocumentEpc.observe(viewLifecycleOwner){
+            binding.tvDocumentName.text = it.name
+            binding.tvEpc.text = it.rfid
             epc = it.rfid
         }
         binding.btnStartScanRadar.setOnClickListener {
