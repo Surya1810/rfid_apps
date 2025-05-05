@@ -29,16 +29,6 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(private val repository: RFIDRepositoryImpl, private val reader: RFIDManager): ViewModel() {
 
-    private val _soundBeep = MutableLiveData<Boolean>()
-    val soundBeep : LiveData<Boolean> get() = _soundBeep
-
-    private val _setDataToSearchingDocument = MutableLiveData<Document>()
-    val searchDocumentEpc : LiveData<Document> get() = _setDataToSearchingDocument
-
-    fun setDataToSearchingDocument(document: Document){
-        _setDataToSearchingDocument.value = document
-    }
-
     private val _isScanning = MutableLiveData<Boolean>()
     val isScanning: LiveData<Boolean> get() = _isScanning
 
@@ -56,10 +46,6 @@ class SearchViewModel @Inject constructor(private val repository: RFIDRepository
         return repository.postLostDocument(postLostDocument)
     }
 
-    fun setNotFound(){
-        _isFound.value = false
-    }
-
     fun setEpcFilter(data: String): Boolean{
         reader.setEpcFilter(data)
         return true
@@ -75,7 +61,6 @@ class SearchViewModel @Inject constructor(private val repository: RFIDRepository
             if (uhftagInfo.epc == epc){
                 _isFound.postValue(true)
                 _isScanning.postValue(false)
-                _soundBeep.postValue(true)
             }
         }
     }
@@ -83,12 +68,6 @@ class SearchViewModel @Inject constructor(private val repository: RFIDRepository
     fun stopReadTag(){
         _isScanning.value = false
         reader.stopReadTag()
-    }
-
-    private fun formatTime(millis: Long): String {
-        val seconds = (millis / 1000) % 60
-        val minutes = (millis / 1000) / 60
-        return String.format("%02d:%02d", minutes, seconds)
     }
 
 }

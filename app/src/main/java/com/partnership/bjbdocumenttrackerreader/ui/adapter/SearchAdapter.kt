@@ -44,7 +44,7 @@ class SearchAdapter(
                 } else {
                     status = "Status : Tidak Ditemukan"
                     binding.cardDocument.backgroundTintList =
-                        ColorStateList.valueOf(ContextCompat.getColor(context, R.color.md_theme_error))
+                        ColorStateList.valueOf(ContextCompat.getColor(context, R.color.md_theme_outline))
                 }
 
                 getChildAt(2)?.let { (it as TextView).text = status }

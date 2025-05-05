@@ -14,6 +14,7 @@ import androidx.paging.cachedIn
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.local.entity.AssetEntity
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
+import com.partnership.bjbdocumenttrackerreader.data.model.Document
 import com.partnership.bjbdocumenttrackerreader.data.model.GetBulkDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.PostStockOpname
@@ -125,14 +126,6 @@ class StockOpnameViewModel @Inject constructor(
         handler.removeCallbacks(timerRunnable)
     }
 
-    fun readTagAuto() {
-        startTimer()
-        reader.readTagAuto { uhfTagInfo ->
-            scannedTags.tryEmit(uhfTagInfo.epc)
-        }
-    }
-
-
     val assetStatusInfo: StateFlow<Pair<Int, Int>> = combine(
         repository.observeDetectedAssets(),
         repository.observeAllAssets()
@@ -144,28 +137,6 @@ class StockOpnameViewModel @Inject constructor(
         repository.getAssetsPagingFlow()
             .cachedIn(viewModelScope)
 
-    fun observeScannedTags() {
-        viewModelScope.launch {
-            scannedTags
-                .buffer()
-                .collectLatest { epcHex ->
-                    val scannedBytes = hexStringToByteArray(epcHex)
-                    val matchedKey = validEpcMap.entries.find { (_, validBytes) ->
-                        compareBytes(scannedBytes, validBytes) == 0
-                    }?.key
-
-                    matchedKey?.let { validEpc ->
-                        Log.w(TAG, "validEPC: $validEpc")
-                        val currentAsset = repository.getAssetByRfid(validEpc)
-                        if (currentAsset?.isThere != true) {
-                            updateIsThere(validEpc, true)
-                            _soundBeep.postValue(true)
-                        }
-                    } ?: Log.w(TAG, "EPC tidak valid secara byte: $epcHex")
-                }
-        }
-    }
-
     private fun updateIsThere(rfidNumber: String, isThere: Boolean) {
         viewModelScope.launch {
             repository.updateIsThere(rfidNumber, isThere)
@@ -175,16 +146,6 @@ class StockOpnameViewModel @Inject constructor(
     private val scannedTags = MutableSharedFlow<String>(extraBufferCapacity = 100)
 
     private val validEpcMap = mutableMapOf<String, ByteArray>()
-
-    fun cacheValidEpcs() {
-        validEpcMap.clear()
-        viewModelScope.launch {
-            val epcList = repository.getAllValidEpcs()
-            epcList.forEach { epc ->
-                validEpcMap[epc] = hexStringToByteArray(epc)
-            }
-        }
-    }
 
     private fun hexStringToByteArray(hex: String): ByteArray {
         val result = ByteArray(hex.length / 2)
@@ -246,7 +207,6 @@ class StockOpnameViewModel @Inject constructor(
 
     //new method
     private val cacheValidEpcs = mutableListOf<ByteArray>()
-    private val scannedCache = mutableMapOf<String, Long>()
     private val recentlyScanned = mutableMapOf<String, Long>()
     private val cooldownMillis = 5000L // 5 detik
 
@@ -298,4 +258,11 @@ class StockOpnameViewModel @Inject constructor(
 
         }
     }
+    private val _setDataToSearchingDocument = MutableLiveData<Document>()
+    val searchDocumentEpc : LiveData<Document> get() = _setDataToSearchingDocument
+
+    fun setDataToSearchingDocument(document: Document){
+        _setDataToSearchingDocument.value = document
+    }
+
 }

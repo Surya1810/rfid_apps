@@ -40,7 +40,6 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // SET REFRESH LISTENER --> HARUS SELALU ADA
         binding.strHome.setOnRefreshListener {
             viewModel.getDashboard()
             setRefreshing(true)
@@ -70,8 +69,7 @@ class HomeFragment : Fragment() {
         }
 
         viewModel.dataDashboard.observe(viewLifecycleOwner) {
-            Log.d("DEBUG", "Observer triggered: ${it.javaClass.simpleName}")
-            setRefreshing(false) // Tambahkan di awal observer sementara waktu
+            setRefreshing(false)
             when (it) {
                 is ResultWrapper.Error -> {
                     setRefreshing(false)
@@ -107,12 +105,12 @@ class HomeFragment : Fragment() {
     }
 
 
-    fun formatToRupiah(value: Double): String {
+    private fun formatToRupiah(value: Double): String {
         val format = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
         return format.format(value).replace(",00", "").replace("Rp", "Rp")
     }
 
-    fun setUpRecycleView(documentList: List<String>){
+    private fun setUpRecycleView(documentList: List<String>){
         val adapter = DocumentAdapter(documentList)
 
         binding.rvDocument.apply {
@@ -136,7 +134,7 @@ class HomeFragment : Fragment() {
         btnDocument?.setOnClickListener {
             viewModel.setIsDocument(true)
             findNavController().navigate(R.id.action_homeFragment_to_scanFragment)
-            dialog.dismiss() // tutup dialog setelah aksi
+            dialog.dismiss()
         }
 
         btnAgunan?.setOnClickListener {
@@ -148,7 +146,10 @@ class HomeFragment : Fragment() {
 
 
 
-    fun setData(dashboardData: GetDashboard){
+    private fun setData(dashboardData: GetDashboard){
+        if (dashboardData.dashboard.listDocumentLost.isNullOrEmpty()){
+            binding.linearLayout4.visibility = View.GONE
+        }
         binding.tvLts.text = dashboardData.overview.lastTimeScan
         binding.tvTotalData.text = dashboardData.overview.totalData.toString()
         binding.tvTotalNilai.text = formatToRupiah(dashboardData.overview.totalvalue)

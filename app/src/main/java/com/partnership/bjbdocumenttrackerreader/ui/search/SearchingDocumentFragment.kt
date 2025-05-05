@@ -17,6 +17,7 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -31,6 +32,7 @@ import com.partnership.bjbdocumenttrackerreader.data.model.Document
 import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentSearchingDocumentBinding
 import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
+import com.partnership.bjbdocumenttrackerreader.ui.scan.StockOpnameViewModel
 import com.partnership.bjbdocumenttrackerreader.util.Utils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -41,7 +43,8 @@ class SearchingDocumentFragment : Fragment() {
     private var isScanning = false
     @Inject lateinit var soundManager: BeepSoundManager
 
-    private val searchViewModel : SearchViewModel by activityViewModels()
+    private val searchViewModel : SearchViewModel by viewModels()
+    private val stockOpnameViewModel: StockOpnameViewModel by activityViewModels()
     private var _binding: FragmentSearchingDocumentBinding? = null
     private val binding get() = _binding!!
     private lateinit var epcToSearch: String
@@ -62,13 +65,7 @@ class SearchingDocumentFragment : Fragment() {
         setupToolbar()
         setUpMenu()
 
-        searchViewModel.soundBeep.observe(viewLifecycleOwner){
-            if (it){
-                soundManager.playBeep()
-            }
-        }
-
-        searchViewModel.searchDocumentEpc.observe(viewLifecycleOwner){
+        stockOpnameViewModel.searchDocumentEpc.observe(viewLifecycleOwner){
             setDataToView(it)
             document =it
             searchViewModel.setEpcFilter(it.rfid)
@@ -98,7 +95,7 @@ class SearchingDocumentFragment : Fragment() {
             // kirim data
             lifecycleScope.launch {
                 when(val result = searchViewModel.postLostDocument(PostLostDocument(document.rfid,isFound))){
-                    is ResultWrapper.Error<*> -> {
+                    is ResultWrapper.Error -> {
                         Utils.dismissLoading()
                         Toast.makeText(requireContext(), "Terjadi kesalahan: ${result.error}", Toast.LENGTH_SHORT).show()
                     }
@@ -159,6 +156,7 @@ class SearchingDocumentFragment : Fragment() {
 
                 updateScanButtonUI(isScanning = false)
                 if (it){
+                    soundManager.playBeep()
                     binding.lyLocating.visibility = View.VISIBLE
                 }else{
                     binding.lyLocating.visibility = View.GONE

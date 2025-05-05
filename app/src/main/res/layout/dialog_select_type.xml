@@ -7,14 +7,14 @@
         android:id="@+id/btnDocument"
         android:layout_margin="16dp"
         android:layout_width="wrap_content"
-        android:layout_height="100dp"
+        android:layout_height="80dp"
         android:layout_weight="1"
         android:text="Dokumen"/>
     <Button
         android:id="@+id/btnAgunan"
         android:layout_margin="16dp"
         android:layout_width="wrap_content"
-        android:layout_height="100dp"
+        android:layout_height="80dp"
         android:layout_weight="1"
         android:text="Agunan"/>
 </LinearLayout>

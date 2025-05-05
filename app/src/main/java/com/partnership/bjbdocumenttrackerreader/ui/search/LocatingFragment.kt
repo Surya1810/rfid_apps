@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.partnership.bjbdocumenttrackerreader.MainActivity
@@ -13,6 +14,7 @@ import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentLocatingBinding
 import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
+import com.partnership.bjbdocumenttrackerreader.ui.scan.StockOpnameViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -22,7 +24,7 @@ class LocatingFragment : Fragment() {
     @Inject
     lateinit var soundManager: BeepSoundManager
 
-    private val searchViewModel : SearchViewModel by activityViewModels()
+    private val stockOpnameViewModel: StockOpnameViewModel by activityViewModels()
     @Inject lateinit var reader : RFIDManager
 
     private var epc = ""
@@ -41,7 +43,7 @@ class LocatingFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        searchViewModel.searchDocumentEpc.observe(viewLifecycleOwner){
+        stockOpnameViewModel.searchDocumentEpc.observe(viewLifecycleOwner){
             epc = it.rfid
         }
         binding.btnStartScanRadar.setOnClickListener {
@@ -67,8 +69,6 @@ class LocatingFragment : Fragment() {
 
         binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
         binding.toolbarScan.setNavigationOnClickListener {
-            searchViewModel.clearFilterReader()
-            searchViewModel.setNotFound()
             findNavController().navigateUp()
         }
     }

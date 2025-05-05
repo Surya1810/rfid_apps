@@ -34,7 +34,7 @@ class SoDocumentAdapter(
                     getChildAt(0)?.let { (it as TextView).text = "Segmen : ${item.segment ?: "-"}" }
 
                     val lokasi = item.location?.let {
-                        "Lokasi : Ruangan ${it.room}, baris ${it.row}, rak ${it.rack}, box ${it.box}"
+                        "Lokasi : Ruangan ${it.room}, ${it.row}, ${it.rack}, box ${it.box}"
                     } ?: "Lokasi : -"
                     getChildAt(1)?.let { (it as TextView).text = lokasi }
                 }
@@ -48,7 +48,7 @@ class SoDocumentAdapter(
                 } else {
                     status = "Status : Tidak Ditemukan"
                     binding.cardDocument.backgroundTintList =
-                        ColorStateList.valueOf(ContextCompat.getColor(context, R.color.md_theme_error))
+                        ColorStateList.valueOf(ContextCompat.getColor(context, R.color.md_theme_outline))
                 }
 
                 getChildAt(2)?.let { (it as TextView).text = status }

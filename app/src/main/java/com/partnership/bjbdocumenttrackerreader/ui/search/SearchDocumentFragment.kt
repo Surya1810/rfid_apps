@@ -38,7 +38,6 @@ import kotlin.properties.Delegates
 class SearchDocumentFragment : Fragment(){
     private val stockOpnameViewModel : StockOpnameViewModel by activityViewModels()
     private val dashboardViewModel : DashboardViewModel by activityViewModels()
-    private val searchingViewModel: SearchViewModel by activityViewModels()
     private var _binding: FragmentSearchDocumentBinding? = null
     private var isDocument by Delegates.notNull<Boolean>()
     private lateinit var searchAdapter: SearchAdapter
@@ -63,7 +62,7 @@ class SearchDocumentFragment : Fragment(){
         }
 
         searchAdapter = SearchAdapter(){document ->
-            searchingViewModel.setDataToSearchingDocument(document)
+            stockOpnameViewModel.setDataToSearchingDocument(document)
             findNavController().navigate(R.id.action_searchDocumentFragment_to_searchingDocumentFragment)
         }
 
@@ -86,7 +85,13 @@ class SearchDocumentFragment : Fragment(){
                 }
                 is ResultWrapper.Success -> {
                     val data = it.data
-                    searchAdapter.submitList(data.data?.documents)
+                    if(data.data?.documents?.isEmpty() == true){
+                        binding.tvInformation.visibility = View.VISIBLE
+                    }else{
+                        searchAdapter.submitList(data.data?.documents)
+                        binding.tvInformation.visibility = View.GONE
+                    }
+
                 }
             }
         }
@@ -113,7 +118,7 @@ class SearchDocumentFragment : Fragment(){
                 val searchView = searchItem.actionView as SearchView
 
                 searchView.apply {
-                    queryHint = "Ketik nama, kode, atau RFID barang"
+                    queryHint = "Ketik nama, kode, atau RFID Dokumen"
 
                     val searchEditText =
                         findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
@@ -192,6 +197,8 @@ class SearchDocumentFragment : Fragment(){
         activity.setupActionBarWithNavController(findNavController())
 
         binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
+        val isDocument = dashboardViewModel.isDocumentSelected.value
+        binding.toolbarScan.setTitle(if (isDocument == true) "Cari Dokumen" else "Cari Agunan")
         binding.toolbarScan.setNavigationOnClickListener {
             findNavController().navigateUp()
         }

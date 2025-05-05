@@ -25,6 +25,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.partnership.bjbdocumenttrackerreader.MainActivity
 import com.partnership.bjbdocumenttrackerreader.R
@@ -48,15 +49,17 @@ import kotlin.properties.Delegates
 class ScanFragment : Fragment(), ReaderKeyEventHandler {
 
     private val stockOpnameViewModel: StockOpnameViewModel by viewModels()
-    private val dashboardViewModel : DashboardViewModel by activityViewModels()
+    private val dashboardViewModel: DashboardViewModel by activityViewModels()
 
-    @Inject lateinit var soundManager: BeepSoundManager
-    private var isDocument : Boolean = true
-    @Inject lateinit var reader: RFIDManager
+    @Inject
+    lateinit var soundManager: BeepSoundManager
+    private var isDocument: Boolean = true
+    @Inject
+    lateinit var reader: RFIDManager
     private var _binding: FragmentScanBinding? = null
     private var message = ""
     private val binding get() = _binding!!
-    private lateinit var assetAdapter : SoDocumentAdapter
+    private lateinit var assetAdapter: SoDocumentAdapter
     private var epcList = mutableListOf<TagInfo>()
 
     override fun onCreateView(
@@ -80,58 +83,102 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
             }
         }
 
-        dashboardViewModel.isDocumentSelected.observe(viewLifecycleOwner){
+        dashboardViewModel.isDocumentSelected.observe(viewLifecycleOwner) {
             isDocument = it
             lifecycleScope.launch {
-                when(val result = stockOpnameViewModel.getBulkDocument(it)){
+                when (val result = stockOpnameViewModel.getBulkDocument(it)) {
                     is ResultWrapper.Error -> {
                         Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT).show()
                     }
+
                     is ResultWrapper.ErrorResponse -> {
                         Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT).show()
                     }
+
                     ResultWrapper.Loading -> {
 
                     }
+
                     is ResultWrapper.NetworkError -> {
-                        Toast.makeText(requireActivity(), "Terjadi kesalahan pada jaringan, Harap periksa jaringan", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireActivity(),
+                            "Terjadi kesalahan pada jaringan, Harap periksa jaringan",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
+
                     is ResultWrapper.Success -> {
-                        stockOpnameViewModel.cacheAllValidEpcs()
+
                     }
                 }
             }
         }
 
         binding.btSend.setOnClickListener {
-            lifecycleScope.launch {
-                when(val result = stockOpnameViewModel.postStockOpname(isDocument)){
-                    is ResultWrapper.Error -> {
-                        Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT).show()
-                    }
-                    is ResultWrapper.ErrorResponse -> {
-                        Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT).show()
-                    }
-                    ResultWrapper.Loading -> {
+            if (reader.isInventorying() == true){
+                Toast.makeText(requireActivity(), "Hentikan scanning terlebih dahulu", Toast.LENGTH_SHORT).show()
+            }else{
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Konfirmasi Kirim")
+                    .setMessage(message)
+                    .setPositiveButton("Kirim") { dialog, _ ->
+                        Utils.showLoading(requireContext())
+                        lifecycleScope.launch {
+                            when (val result = stockOpnameViewModel.postStockOpname(isDocument)) {
+                                is ResultWrapper.Error -> {
+                                    Utils.dismissLoading()
+                                    Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT)
+                                        .show()
+                                }
 
+                                is ResultWrapper.ErrorResponse -> {
+                                    Utils.dismissLoading()
+                                    Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+
+                                ResultWrapper.Loading -> {
+
+                                }
+
+                                is ResultWrapper.NetworkError -> {
+                                    Utils.dismissLoading()
+                                    Toast.makeText(
+                                        requireActivity(),
+                                        "Terjadi kesalahan pada jaringan, Harap periksa jaringan",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+
+                                is ResultWrapper.Success -> {
+                                    Utils.dismissLoading()
+                                    Toast.makeText(
+                                        requireActivity(),
+                                        "Stock Opname Berhasil",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    findNavController().navigateUp()
+                                }
+                            }
+                        }
+                        dialog.dismiss()
                     }
-                    is ResultWrapper.NetworkError -> {
-                        Toast.makeText(requireActivity(), "Terjadi kesalahan pada jaringan, Harap periksa jaringan", Toast.LENGTH_SHORT).show()
+                    .setNegativeButton("Periksa Kembali") { dialog, _ ->
+                        dialog.dismiss()
+                        Utils.dismissLoading()
                     }
-                    is ResultWrapper.Success -> {
-                        Toast.makeText(requireActivity(), "Stock Opname Berhasil", Toast.LENGTH_SHORT).show()
-                        findNavController().navigateUp()
-                    }
-                }
+                    .show()
             }
+
+
         }
 
-        stockOpnameViewModel.elapsedTime.observe(viewLifecycleOwner){
+        stockOpnameViewModel.elapsedTime.observe(viewLifecycleOwner) {
             binding.tvTimeScanning.text = it
         }
 
-        stockOpnameViewModel.soundBeep.observe(viewLifecycleOwner){
-            if (it){
+        stockOpnameViewModel.soundBeep.observe(viewLifecycleOwner) {
+            if (it) {
                 soundManager.playBeep()
             }
         }
@@ -149,17 +196,16 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
                 }
             }
         }
-        stockOpnameViewModel.observeScannedTags()
 
         lifecycleScope.launch {
-            stockOpnameViewModel.pagedAssets.collectLatest {pagingData ->
+            stockOpnameViewModel.pagedAssets.collectLatest { pagingData ->
                 assetAdapter.submitData(pagingData)
             }
         }
     }
 
     private fun setupRecyclerView() {
-        assetAdapter = SoDocumentAdapter(){
+        assetAdapter = SoDocumentAdapter() {
 
         }
         binding.rvEpc.apply {
@@ -206,14 +252,25 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
             binding.btScan.text = "START"
             binding.btScan.setBackgroundColor(resources.getColor(R.color.md_theme_yellow))
             binding.btSend.isEnabled = true
-            binding.btSend.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.md_theme_yellow))
+            binding.btSend.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.md_theme_yellow
+                )
+            )
             binding.tvTimeScanning.text = "00:00"
         } else {
+            stockOpnameViewModel.cacheAllValidEpcs()
             stockOpnameViewModel.readTagAuto2()
             binding.btScan.text = "STOP"
             binding.btScan.setBackgroundColor(Color.RED)
             binding.btSend.isEnabled = false
-            binding.btSend.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.md_theme_outlineVariant))
+            binding.btSend.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.md_theme_outlineVariant
+                )
+            )
         }
     }
 

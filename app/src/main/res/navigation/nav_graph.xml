@@ -75,6 +75,6 @@
     <fragment
         android:id="@+id/locatingFragment"
         android:name="com.partnership.bjbdocumenttrackerreader.ui.search.LocatingFragment"
-        android:label="fragment_locating"
+        android:label="Cari Lokasi"
         tools:layout="@layout/fragment_locating" />
 </navigation>
