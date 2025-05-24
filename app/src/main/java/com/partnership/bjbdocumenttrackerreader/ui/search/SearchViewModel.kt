@@ -38,21 +38,8 @@ class SearchViewModel @Inject constructor(private val repository: RFIDRepository
     private val _isFound = MutableLiveData<Boolean>()
     val isFound : LiveData<Boolean> get() = _isFound
 
-    init {
-        _isFound.value = false
-    }
-
     suspend fun postLostDocument(postLostDocument: PostLostDocument): ResultWrapper<BaseResponse<Unit>> {
         return repository.postLostDocument(postLostDocument)
-    }
-
-    fun setEpcFilter(data: String): Boolean{
-        reader.setEpcFilter(data)
-        return true
-    }
-
-    fun clearFilterReader(){
-        reader.disableFilter()
     }
 
     fun searchSingleTag(epc: String){

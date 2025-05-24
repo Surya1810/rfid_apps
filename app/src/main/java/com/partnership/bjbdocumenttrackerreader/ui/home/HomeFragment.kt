@@ -54,10 +54,6 @@ class HomeFragment : Fragment() {
             setRefreshing(true)
         }
 
-        binding.btSeeAll.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_listLostFragment)
-        }
-
         binding.btSearchAgunan.setOnClickListener {
             findNavController().navigate(R.id.action_homeFragment_to_searchDocumentFragment)
             viewModel.setIsDocument(false)
@@ -89,8 +85,6 @@ class HomeFragment : Fragment() {
 
                     it.data.data?.let { data ->
                         setData(data)
-                        Log.e(TAG, "onViewCreated: $data")
-                        setUpRecycleView(it.data.data.dashboard.listDocumentLost)
                     }
                 }
                 is ResultWrapper.NetworkError -> {
@@ -108,15 +102,6 @@ class HomeFragment : Fragment() {
     private fun formatToRupiah(value: Double): String {
         val format = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
         return format.format(value).replace(",00", "").replace("Rp", "Rp")
-    }
-
-    private fun setUpRecycleView(documentList: List<String>){
-        val adapter = DocumentAdapter(documentList)
-
-        binding.rvDocument.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            this.adapter = adapter
-        }
     }
 
     private fun showDialog() {
@@ -147,9 +132,6 @@ class HomeFragment : Fragment() {
 
 
     private fun setData(dashboardData: GetDashboard){
-        if (dashboardData.dashboard.listDocumentLost.isNullOrEmpty()){
-            binding.linearLayout4.visibility = View.GONE
-        }
         binding.tvLts.text = dashboardData.overview.lastTimeScan
         binding.tvTotalData.text = dashboardData.overview.totalData.toString()
         binding.tvTotalNilai.text = formatToRupiah(dashboardData.overview.totalvalue)

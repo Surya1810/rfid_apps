@@ -3,6 +3,12 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
+    <color name="state_good">#86FFB8</color>
+    <color name="accent_good">#44C46F</color>
+
+    <color name="state_bad">#FF7375</color>
+    <color name="accent_bad">#964042</color>
+
     <color name="md_theme_primary">#003C65</color>
     <color name="md_theme_yellow">#efcb13</color>
     <color name="md_theme_green">#4CAF50</color>

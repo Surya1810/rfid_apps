@@ -12,6 +12,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -67,24 +68,9 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentScanBinding.inflate(inflater, container, false)
-        setupToolbar()
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        //setUpMenu()
-        setupRecyclerView()
-
-        binding.btScan.setOnClickListener {
-            val isScanning = reader.isInventorying()
-            if (isScanning != null) {
-                scanTag(isScanning)
-            }
-        }
-
         dashboardViewModel.isDocumentSelected.observe(viewLifecycleOwner) {
             isDocument = it
+            setupToolbar()
             lifecycleScope.launch {
                 when (val result = stockOpnameViewModel.getBulkDocument(it)) {
                     is ResultWrapper.Error -> {
@@ -105,6 +91,7 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
                             "Terjadi kesalahan pada jaringan, Harap periksa jaringan",
                             Toast.LENGTH_SHORT
                         ).show()
+
                     }
 
                     is ResultWrapper.Success -> {
@@ -113,6 +100,52 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
                 }
             }
         }
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupRecyclerView()
+
+        binding.btScan.setOnClickListener {
+            val isScanning = reader.isInventorying()
+            if (isScanning != null) {
+                scanTag(isScanning)
+            }
+        }
+
+        binding.lyFound.setOnClickListener {
+            stockOpnameViewModel.setIsThereFilter(true)
+        }
+
+        binding.lyTotal.setOnClickListener {
+            stockOpnameViewModel.setIsThereFilter(null)
+        }
+
+        binding.lyNotFound.setOnClickListener {
+            stockOpnameViewModel.setIsThereFilter(false)
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Cek kondisi, misal sedang scanning
+                if (reader.isInventorying() == true) {
+                    Toast.makeText(requireContext(), "Hentikan scan terlebih dahulu!", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Tampilkan dialog konfirmasi
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Keluar Halaman?")
+                        .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
+                        .setPositiveButton("Ya") { _, _ ->
+                            findNavController().navigateUp()
+                        }
+                        .setNegativeButton("Batal") { dialog, _ ->
+                            dialog.dismiss()
+                        }
+                        .show()
+                }
+            }
+        })
 
         binding.btSend.setOnClickListener {
             if (reader.isInventorying() == true){
@@ -185,6 +218,7 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
         lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 stockOpnameViewModel.assetStatusInfo.collect { (detected, total) ->
+                    binding.tvTotal.text = total.toString()
                     binding.tvDetected.text = detected.toString()
                     val missing = total - detected
                     binding.tvUndetected.text = missing.toString()
@@ -213,37 +247,6 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
             adapter = assetAdapter
         }
     }
-
-   /* private fun setUpMenu() {
-        val menuHost: MenuHost = requireActivity()
-
-        menuHost.addMenuProvider(object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                menuInflater.inflate(R.menu.reader_setting, menu)
-            }
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                return when (menuItem.itemId) {
-                    R.id.readerSetting -> {
-                        val isScanning = reader.isInventorying()
-                        if (isScanning == true) {
-                            Toast.makeText(
-                                requireActivity(),
-                                "Hentikan Scan Terlebih Dahulu!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            false
-                        } else {
-                            findNavController().navigate(R.id.action_scanFragment_to_settingReaderFragment)
-                            true
-                        }
-                    }
-
-                    else -> false
-                }
-            }
-        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
-    }*/
 
     private fun scanTag(isScanning: Boolean) {
         if (isScanning) {
@@ -283,7 +286,21 @@ class ScanFragment : Fragment(), ReaderKeyEventHandler {
 
         binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
         binding.toolbarScan.setNavigationOnClickListener {
-            findNavController().navigateUp()
+            if (reader.isInventorying() == true) {
+                Toast.makeText(requireContext(), "Hentikan scan terlebih dahulu!", Toast.LENGTH_SHORT).show()
+            } else {
+                // Tampilkan dialog konfirmasi
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Keluar Halaman?")
+                    .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
+                    .setPositiveButton("Ya") { _, _ ->
+                        findNavController().navigateUp()
+                    }
+                    .setNegativeButton("Batal") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .show()
+            }
         }
     }
 

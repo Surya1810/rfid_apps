@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -71,7 +72,11 @@ class LocatingFragment : Fragment() {
 
         binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
         binding.toolbarScan.setNavigationOnClickListener {
-            findNavController().navigateUp()
+            if (!binding.btnStartScanRadar.isEnabled){
+                Toast.makeText(requireContext(), "Hentikan locating terlebih dahulu", Toast.LENGTH_SHORT).show()
+            }else{
+                findNavController().navigateUp()
+            }
         }
     }
 

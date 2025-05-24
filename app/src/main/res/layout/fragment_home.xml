@@ -79,7 +79,7 @@
                             android:id="@+id/textView2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Last Time Scan"
+                            android:text="Stock Opname Terakhir"
                             android:textColor="@color/md_theme_primary"
                             android:textStyle="bold"
                             app:layout_constraintEnd_toEndOf="parent"
@@ -189,7 +189,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:backgroundTint="@color/md_theme_yellow"
-                                android:text="Stock Opname"
+                                android:text="Scan Dokumen"
                                 android:textColor="@color/md_theme_primary"
                                 app:icon="@drawable/barcode_reader_24px"
                                 app:iconTint="@color/md_theme_primary" />
@@ -412,72 +412,6 @@
                             app:layout_constraintEnd_toEndOf="@+id/textView14"
                             app:layout_constraintStart_toStartOf="@+id/textView14"
                             app:layout_constraintTop_toBottomOf="@+id/textView14" />
-
-                        <com.google.android.material.divider.MaterialDivider
-                            android:id="@+id/materialDivider4"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/tvFound" />
-
-                        <LinearLayout
-                            android:id="@+id/linearLayout4"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            app:layout_constraintTop_toBottomOf="@+id/materialDivider4">
-
-                            <TextView
-                                android:id="@+id/textView18"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
-                                android:layout_weight="1"
-                                android:text="List Dokumen Hilang"
-                                android:textColor="@color/md_theme_primary"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/materialDivider4" />
-
-                            <LinearLayout
-                                android:id="@+id/btSeeAll"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="8dp"
-                                android:gravity="center"
-                                android:orientation="horizontal"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintTop_toTopOf="@+id/textView18">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginEnd="8dp"
-                                    android:text="Lihat Semua"
-                                    android:textColor="@color/md_theme_primary"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold" />
-
-                                <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
-                                    android:src="@drawable/arrow_forward_ios_24px" />
-                            </LinearLayout>
-                        </LinearLayout>
-
-
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvDocument"
-                            android:layout_width="match_parent"
-                            android:layout_height="0dp"
-                            android:layout_marginTop="8dp"
-                            tools:listitem="@layout/rv_document_lost"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/linearLayout4" />
 
                         <androidx.constraintlayout.widget.Guideline
                             android:id="@+id/guideline2"

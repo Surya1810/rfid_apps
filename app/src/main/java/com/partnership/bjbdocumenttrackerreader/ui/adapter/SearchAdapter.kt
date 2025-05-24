@@ -19,37 +19,27 @@ class SearchAdapter(
 
     inner class SearchViewHolder(val binding: RvDocumentBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: Document) {
-            binding.tvEpc.text = item.rfid
-            binding.tvCIF.text = item.noDoc
-            binding.tvName.text = item.name
-            binding.linearLayout3.apply {
-                if (item.segment == null){
-                    binding.tvSegment.visibility = View.GONE
-                    binding.tvLocation.visibility = View.GONE
-                }else{
-                    getChildAt(0)?.let { (it as TextView).text = "Segmen : ${item.segment ?: "-"}" }
-
-                    val lokasi = item.location?.let {
-                        "Lokasi : Ruangan ${it.room}, baris ${it.row}, rak ${it.rack}, box ${it.box}"
-                    } ?: "Lokasi : -"
-                    getChildAt(1)?.let { (it as TextView).text = lokasi }
-                }
-                val context = binding.root.context
-                val status: String
-
-                if (item.isThere) {
-                    status = "Status : Ditemukan"
-                    binding.cardDocument.backgroundTintList =
-                        ColorStateList.valueOf(ContextCompat.getColor(context, R.color.md_theme_primary))
-                } else {
-                    status = "Status : Tidak Ditemukan"
-                    binding.cardDocument.backgroundTintList =
-                        ColorStateList.valueOf(ContextCompat.getColor(context, R.color.md_theme_outline))
-                }
-
-                getChildAt(2)?.let { (it as TextView).text = status }
+            binding.tvNameDocument.text = item.name
+            binding.tvCIF.text = item.cif
+            binding.tvRfid.text = item.rfid
+            binding.tvBaris.text = item.location?.box
+            binding.tvBox.text = item.location?.box
+            binding.tvRak.text = item.location?.rack
+            if (item.segment.isNullOrEmpty()){
+                binding.lySegment.visibility = View.GONE
+            }else{
+                binding.tvSegment.text = item.segment
             }
-            binding.cardDocument.setOnClickListener {
+            if (item.isThere) {
+                binding.tvState.text = "Ditemukan"
+                binding.tvState.setTextColor(ContextCompat.getColor(binding.root.context, R.color.accent_good))
+                binding.lyState.setCardBackgroundColor(ContextCompat.getColor(binding.root.context, R.color.state_good))
+            } else {
+                binding.tvState.text = "Tidak Ditemukan"
+                binding.tvState.setTextColor(ContextCompat.getColor(binding.root.context, R.color.accent_bad))
+                binding.lyState.setCardBackgroundColor(ContextCompat.getColor(binding.root.context, R.color.state_bad))
+            }
+            binding.root.setOnClickListener{
                 onItemClick(item)
             }
         }

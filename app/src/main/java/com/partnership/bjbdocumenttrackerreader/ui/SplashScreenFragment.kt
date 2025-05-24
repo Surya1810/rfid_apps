@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
@@ -30,7 +31,6 @@ class SplashScreenFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         initReaderIfNeeded()
-        Log.e("reader power", "power: ${reader.getCurrentPower()}", )
         if (reader.getCurrentPower() != 30){
             reader.setPower(30)
         }
@@ -44,7 +44,10 @@ class SplashScreenFragment : Fragment() {
         }
 
         viewModel.messageReader.observe(viewLifecycleOwner) {
-            findNavController().navigate(R.id.action_splashScreenFragment_to_homeFragment)
+            val navOptions = NavOptions.Builder()
+                .setPopUpTo(R.id.splashScreenFragment, true)
+                .build()
+            findNavController().navigate(R.id.action_splashScreenFragment_to_homeFragment, null, navOptions)
         }
     }
 

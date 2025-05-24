@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BJB Document Tracker Reader</string>
+    <string name="app_name">BJB DMS</string>
 
     <string name="China_Standard_840_845MHz" translatable="false">China Standard 840-845MHz</string>
     <string name="China_Standard_920_925MHz" translatable="false">China Standard 920-925MHz</string>

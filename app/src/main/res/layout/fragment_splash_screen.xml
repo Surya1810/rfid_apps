@@ -44,7 +44,7 @@
     <ImageView
         android:layout_width="250dp"
         android:layout_height="250dp"
-        android:src="@drawable/logo_bjb"
+        android:src="@drawable/logo_bjb_dms"
         app:layout_constraintBottom_toTopOf="@+id/textView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

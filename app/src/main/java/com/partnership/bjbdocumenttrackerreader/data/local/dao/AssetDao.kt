@@ -13,15 +13,24 @@ import kotlinx.coroutines.flow.Flow
 interface AssetDao {
     @Query(
         """
-        UPDATE assets 
-        SET isThere = :status 
-        WHERE rfid = :rfidNumber AND isThere != :status
+    UPDATE assets 
+    SET isThere = :status 
+    WHERE LOWER(rfid) = :rfidLower AND isThere != :status
     """
     )
-    fun updateIsThere(rfidNumber: String, status: Boolean)
+    fun updateIsThere(rfidLower: String, status: Boolean)
 
-    @Query("SELECT * FROM assets ORDER BY noDoc ASC")
-    fun getAssetsPaging(): PagingSource<Int, AssetEntity>
+    @Query(
+        """
+    SELECT * FROM assets
+    WHERE (:isThere IS NULL OR isThere = :isThere)
+    ORDER BY id ASC
+"""
+    )
+    fun getFilteredAssets(
+        isThere: Boolean?
+    ): PagingSource<Int, AssetEntity>
+
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(assets: List<AssetEntity>)
@@ -44,6 +53,6 @@ interface AssetDao {
     @Query("SELECT id, isThere FROM assets")
     suspend fun getStockOpnameItems(): List<AssetStatus>
 
-    @Query("SELECT isThere FROM assets WHERE rfid = :epc LIMIT 1")
+    @Query("SELECT isThere FROM assets WHERE LOWER(rfid) = :epc LIMIT 1")
     fun isAssetThere(epc: String): Boolean
 }

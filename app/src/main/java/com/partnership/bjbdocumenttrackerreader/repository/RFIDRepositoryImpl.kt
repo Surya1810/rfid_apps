@@ -208,10 +208,11 @@ class RFIDRepositoryImpl @Inject constructor(
     fun observeAllAssets(): Flow<Int> {
         return assetDao.observeAllAssets()
     }
-    fun getAssetsPagingFlow(): Flow<PagingData<AssetEntity>> {
+
+    fun getAssetsPagingFlow(isThere: Boolean?): Flow<PagingData<AssetEntity>> {
         return Pager(
-            config = PagingConfig(pageSize = 20),
-            pagingSourceFactory = { assetDao.getAssetsPaging() }
+            config = PagingConfig(pageSize = 10),
+            pagingSourceFactory = { assetDao.getFilteredAssets(isThere) }
         ).flow
     }
 

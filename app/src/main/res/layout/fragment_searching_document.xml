@@ -21,7 +21,6 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/md_theme_primary"
-            app:menu="@menu/reader_setting"
             app:navigationIcon="@drawable/arrow_back_ios_24px"
             app:title="Searching"
             app:elevation="0dp"
@@ -173,7 +172,7 @@
                 android:layout_marginHorizontal="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/md_theme_yellow"
-                android:text="SCAN"
+                android:text="Start"
                 android:textColor="@color/md_theme_primary" />
 
             <com.google.android.material.button.MaterialButton

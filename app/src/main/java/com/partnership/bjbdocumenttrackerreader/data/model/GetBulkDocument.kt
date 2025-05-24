@@ -28,14 +28,14 @@ data class Location(
 fun GetBulkDocument.toEntityList(): List<AssetEntity> {
     return documents.map { document ->
         AssetEntity(
-            id = document.id, // convert Int ke String karena AssetEntity pakai String
+            id = document.id,
             noDoc = document.noDoc,
             rfid = document.rfid,
             cif = document.cif,
             name = document.name,
             segment = document.segment,
             amountAgunan = document.amountAgunan,
-            location = document.location, // langsung bisa dipakai karena strukturnya sama
+            location = document.location,
             isThere = document.isThere
         )
     }

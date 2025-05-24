@@ -30,13 +30,11 @@ class RFIDManager {
         }
     }
 
-    fun stopReadTag(): Boolean {
-        return try {
-            rfid?.stopInventory() // Menghentikan pembacaan tag RFID
-            Log.i("RFID", "RFID Scanning Stopped")
-            true
-        } catch (ex: Exception) {
-            Log.e("RFID", "Stop Read Error: ${ex.message}")
+    fun stopReadTag(): Boolean? {
+        //menghentikan pembacaan tag
+        return if (rfid?.isInventorying == true){
+            rfid?.stopInventory()
+        }else{
             false
         }
     }
