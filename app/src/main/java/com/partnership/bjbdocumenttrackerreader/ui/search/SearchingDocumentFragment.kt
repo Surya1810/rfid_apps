@@ -67,7 +67,15 @@ class SearchingDocumentFragment : Fragment() {
             Log.e("isFound", it.toString(), )
             isFound = it
             if (it) {
-                binding.tvStatusItem.text = "Dokumen Ditemukan"
+                if (it) {
+                    binding.tvState.text = "Ditemukan"
+                    binding.tvState.setTextColor(ContextCompat.getColor(binding.root.context, R.color.accent_good))
+                    binding.lyState.setCardBackgroundColor(ContextCompat.getColor(binding.root.context, R.color.state_good))
+                } else {
+                    binding.tvState.text = "Tidak Ditemukan"
+                    binding.tvState.setTextColor(ContextCompat.getColor(binding.root.context, R.color.accent_bad))
+                    binding.lyState.setCardBackgroundColor(ContextCompat.getColor(binding.root.context, R.color.state_bad))
+                }
                 searchViewModel.stopReadTag()
 
                 updateScanButtonUI(isScanning = false)
@@ -164,12 +172,28 @@ class SearchingDocumentFragment : Fragment() {
 
     private fun setDataToView(document: Document){
         binding.apply {
-            tvEpc.text = document.rfid
-            tvCIF.text = document.cif
-            tvName.text = document.name
+            binding.tvNameDocument.text = document.name
+            binding.tvCIF.text = document.cif
+            binding.tvRfid.text = document.rfid
+            binding.tvBaris.text = document.location?.row
+            binding.tvBox.text = document.location?.box
+            binding.tvRak.text = document.location?.rack
+            if (document.segment.isNullOrEmpty()){
+                binding.lySegment.visibility = View.GONE
+            }else{
+                binding.tvSegment.text = document.segment
+            }
+            if (isFound) {
+                binding.tvState.text = "Ditemukan"
+                binding.tvState.setTextColor(ContextCompat.getColor(binding.root.context, R.color.accent_good))
+                binding.lyState.setCardBackgroundColor(ContextCompat.getColor(binding.root.context, R.color.state_good))
+            } else {
+                binding.tvState.text = "Tidak Ditemukan"
+                binding.tvState.setTextColor(ContextCompat.getColor(binding.root.context, R.color.accent_bad))
+                binding.lyState.setCardBackgroundColor(ContextCompat.getColor(binding.root.context, R.color.state_bad))
+            }
         }
     }
-
 
     private fun updateScanButtonUI(isScanning: Boolean) {
         if (isScanning) {

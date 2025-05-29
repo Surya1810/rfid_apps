@@ -31,7 +31,7 @@ class SoDocumentAdapter(
             binding.tvNameDocument.text = item.name
             binding.tvCIF.text = item.cif
             binding.tvRfid.text = item.rfid
-            binding.tvBaris.text = item.location?.box
+            binding.tvBaris.text = item.location?.row
             binding.tvBox.text = item.location?.box
             binding.tvRak.text = item.location?.rack
             if (item.segment.isNullOrEmpty()){

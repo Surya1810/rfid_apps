@@ -183,22 +183,8 @@ class StockOpnameViewModel @Inject constructor(
     }
 
     //new method
-    private val cacheValidEpcs = mutableListOf<ByteArray>()
-    private val cacheLock = Mutex() // untuk kunci akses
-    private val recentlyScanned = mutableMapOf<String, Long>()
-    private val cooldownMillis = 5000L // 5 detik
 
-    @OptIn(ExperimentalStdlibApi::class)
-    fun cacheAllValidEpcs() {
-        viewModelScope.launch {
-            val allEpc = repository.getAllValidEpcs()
-            cacheLock.withLock {
-                cacheValidEpcs.clear()
-                cacheValidEpcs.addAll(allEpc.map { it.hexToByteArray() })
-            }
-            Log.w(TAG, "cacheAllValidEpcs: $allEpc")
-        }
-    }
+
 
     @OptIn(ExperimentalStdlibApi::class)
     fun readTagAuto2() {
@@ -227,6 +213,24 @@ class StockOpnameViewModel @Inject constructor(
     }
 
 
+    private val cacheValidEpcs = mutableListOf<ByteArray>()
+    private val cacheLock = Mutex() // untuk kunci akses
+    private val recentlyScanned = mutableMapOf<String, Long>()
+    private val cooldownMillis = 5000L
+
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun cacheAllValidEpcs() {
+        viewModelScope.launch {
+            val allEpc = repository.getAllValidEpcs()
+            cacheLock.withLock {
+                cacheValidEpcs.clear()
+                cacheValidEpcs.addAll(allEpc.map { it.hexToByteArray() })
+            }
+            Log.w(TAG, "cacheAllValidEpcs: $allEpc")
+        }
+    }
+
     private fun isRecentlyScanned(hex: String): Boolean {
         val currentTime = System.currentTimeMillis()
         val lastScanned = recentlyScanned[hex] ?: 0L
@@ -242,6 +246,7 @@ class StockOpnameViewModel @Inject constructor(
         if (!repository.isAssetThere(hex)) {
             repository.updateIsThere(hex, true)
             _soundBeep.postValue(true)
+
         }
     }
 
