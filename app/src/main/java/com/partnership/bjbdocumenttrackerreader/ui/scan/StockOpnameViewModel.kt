@@ -16,29 +16,24 @@ import com.partnership.bjbdocumenttrackerreader.data.local.entity.AssetEntity
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import com.partnership.bjbdocumenttrackerreader.data.model.Document
 import com.partnership.bjbdocumenttrackerreader.data.model.GetBulkDocument
-import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.PostStockOpname
 import com.partnership.bjbdocumenttrackerreader.data.model.TagInfo
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
 import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepositoryImpl
+import com.partnership.bjbdocumenttrackerreader.util.RFIDUtils
 import com.partnership.bjbdocumenttrackerreader.util.SingleLiveEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -154,8 +149,8 @@ class StockOpnameViewModel @Inject constructor(
 
     //get data from API
 
-    private val _getSearch = MutableLiveData<ResultWrapper<BaseResponse<GetBulkDocument>>>()
-    val listSearch: LiveData<ResultWrapper<BaseResponse<GetBulkDocument>>> get() = _getSearch
+    private val _getSearch = MutableLiveData<ResultWrapper<BaseResponse<GetBulkDocument>>?>()
+    val listSearch: LiveData<ResultWrapper<BaseResponse<GetBulkDocument>>?> get() = _getSearch
 
     fun getSearchDocument(isDocument: Boolean, query: String? = null) {
         viewModelScope.launch {
@@ -165,6 +160,10 @@ class StockOpnameViewModel @Inject constructor(
                 search = query
             )
         }
+    }
+
+    fun clearSearch(){
+        _getSearch.value = null
     }
 
     suspend fun getBulkDocument(isDocument: Boolean): ResultWrapper<BaseResponse<GetBulkDocument>> {
@@ -182,71 +181,56 @@ class StockOpnameViewModel @Inject constructor(
         return repository.postStockOpname(type, PostStockOpname(dataBulk))
     }
 
-    //new method
+    private val _scannedTags = MutableStateFlow<List<TagInfo>>(emptyList())
+    val scannedTags: StateFlow<List<TagInfo>> get() = _scannedTags
 
-
-
-    @OptIn(ExperimentalStdlibApi::class)
-    fun readTagAuto2() {
-        startTimer()
-        reader.readTagAuto { uhfTagInfo ->
-            val scanned = uhfTagInfo.epcBytes
-
-            var matched = false
-            runBlocking {
-                cacheLock.withLock {
-                    matched = cacheValidEpcs.any { valid ->
-                        scanned.contentEquals(valid)
-                    }
-                }
-            }
-
-            if (matched) {
-                val hex = scanned.toHexString()
-                if (!isRecentlyScanned(hex)) {
-                    markScanned(hex)
-                    Log.w(TAG, "readTagAuto2: $hex", )
-                    updateIsThere(hex)
-                }
-            }
+    fun startScan() {
+        reader.readTagAuto { newTag ->
+            val tagInfo = TagInfo(
+                epc = newTag.epc,
+                rssi = newTag.rssi
+            )
+            insertTagOrdered(tagInfo)
         }
     }
 
-
-    private val cacheValidEpcs = mutableListOf<ByteArray>()
-    private val cacheLock = Mutex() // untuk kunci akses
-    private val recentlyScanned = mutableMapOf<String, Long>()
-    private val cooldownMillis = 5000L
-
-
-    @OptIn(ExperimentalStdlibApi::class)
-    fun cacheAllValidEpcs() {
-        viewModelScope.launch {
-            val allEpc = repository.getAllValidEpcs()
-            cacheLock.withLock {
-                cacheValidEpcs.clear()
-                cacheValidEpcs.addAll(allEpc.map { it.hexToByteArray() })
-            }
-            Log.w(TAG, "cacheAllValidEpcs: $allEpc")
+    fun stopScan(){
+        if (reader.isInventorying() == true){
+            reader.stopReadTag()
         }
     }
 
-    private fun isRecentlyScanned(hex: String): Boolean {
-        val currentTime = System.currentTimeMillis()
-        val lastScanned = recentlyScanned[hex] ?: 0L
-        return currentTime - lastScanned < cooldownMillis
-    }
+    private fun insertTagOrdered(newTag: TagInfo) {
+        val currentList = _scannedTags.value.toMutableList()
+        val exists = booleanArrayOf(false)
 
-    private fun markScanned(hex: String) {
-        recentlyScanned[hex] = System.currentTimeMillis()
-    }
+        val index = RFIDUtils.getInsertIndex(currentList, newTag, exists)
 
-    private fun updateIsThere(hex: String) {
-
-        if (!repository.isAssetThere(hex)) {
-            repository.updateIsThere(hex, true)
+        if (!exists[0]) {
             _soundBeep.postValue(true)
+            currentList.add(index, newTag)
+            _scannedTags.value = currentList
+        }
+    }
 
+    fun clearScannedTags() {
+        _scannedTags.value = emptyList()
+    }
+
+    fun validateAllTags(onDone: () -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val currentTags = scannedTags.value
+
+            currentTags.forEach { tag ->
+                if (!repository.isAssetThere(tag.epc)) {
+                    repository.updateIsThere(tag.epc, true)
+                }
+            }
+
+            // Kembali ke Main Thread setelah selesai untuk update UI
+            withContext(Dispatchers.Main) {
+                onDone()
+            }
         }
     }
 

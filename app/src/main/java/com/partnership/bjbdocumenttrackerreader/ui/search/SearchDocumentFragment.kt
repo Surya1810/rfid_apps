@@ -93,6 +93,11 @@ class SearchDocumentFragment : Fragment(){
                     }
 
                 }
+
+                null -> {
+                    searchAdapter.submitList(emptyList())
+                    binding.tvInformation.visibility = View.VISIBLE
+                }
             }
         }
 
@@ -202,5 +207,10 @@ class SearchDocumentFragment : Fragment(){
         binding.toolbarScan.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stockOpnameViewModel.clearSearch()
     }
 }

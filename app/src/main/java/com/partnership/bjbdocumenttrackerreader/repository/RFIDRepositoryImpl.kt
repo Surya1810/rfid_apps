@@ -97,13 +97,13 @@ class RFIDRepositoryImpl @Inject constructor(
 
     override suspend fun getBulkAgunan(): ResultWrapper<BaseResponse<GetBulkDocument>> {
         return try {
+            assetDao.deleteAllAssets()
             val response = apiService.getBulkAgunan()
 
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body?.status == "success" && body.data != null) {
                     val entities = body.data.toEntityList()
-                    assetDao.deleteAllAssets()
                     assetDao.insertAll(entities)
                     ResultWrapper.Success(body)
                 } else {
