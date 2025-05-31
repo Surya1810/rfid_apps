@@ -166,13 +166,20 @@ class StockOpnameViewModel @Inject constructor(
         _getSearch.value = null
     }
 
-    suspend fun getBulkDocument(isDocument: Boolean): ResultWrapper<BaseResponse<GetBulkDocument>> {
-        Log.w(TAG, "getBulkDocument: $isDocument")
-        return if (isDocument) {
-            repository.getBulkDocument()
+    private val _getBulkDocument = SingleLiveEvent<ResultWrapper<BaseResponse<GetBulkDocument>>?>()
+    val listBulkDocument: LiveData<ResultWrapper<BaseResponse<GetBulkDocument>>?> get() = _getBulkDocument
+
+    suspend fun getBulkDocument(isDocument: Boolean) {
+
+        if (isDocument) {
+            _getBulkDocument.value = repository.getBulkDocument()
         } else {
-            repository.getBulkAgunan()
+            _getBulkDocument.value = repository.getBulkAgunan()
         }
+    }
+
+    fun clearBulkDocument(){
+        _getBulkDocument.value = null
     }
 
     suspend fun postStockOpname(isDocument: Boolean): ResultWrapper<BaseResponse<Unit>> {
@@ -210,12 +217,17 @@ class StockOpnameViewModel @Inject constructor(
             _soundBeep.postValue(true)
             currentList.add(index, newTag)
             _scannedTags.value = currentList
+        }else{
+            _soundBeep.postValue(false)
         }
     }
 
     fun clearScannedTags() {
+        Log.d(TAG, "clearScannedTags() dipanggil, jumlah tag sebelum dihapus: ${_scannedTags.value.size}")
         _scannedTags.value = emptyList()
+        Log.d(TAG, "clearScannedTags() selesai, jumlah tag setelah dihapus: ${_scannedTags.value.size}")
     }
+
 
     fun validateAllTags(onDone: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {

@@ -49,8 +49,7 @@ class RFIDManager {
         onTagRead(newTagDetected?.let {
             TagInfo(
                 epc = it.epc,
-                rssi = it.rssi,
-                isThere = true,
+                rssi = it.rssi
             )
         })
     }

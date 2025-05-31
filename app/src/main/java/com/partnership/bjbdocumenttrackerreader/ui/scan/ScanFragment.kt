@@ -16,13 +16,16 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.partnership.bjbdocumenttrackerreader.MainActivity
 import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentScanBinding
+import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
+import com.partnership.bjbdocumenttrackerreader.reader.ReaderKeyEventHandler
 import com.partnership.bjbdocumenttrackerreader.ui.adapter.TagAdapter
 import com.partnership.bjbdocumenttrackerreader.ui.home.DashboardViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,14 +36,14 @@ import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class ScanFragment : Fragment() {
+class ScanFragment : Fragment(), ReaderKeyEventHandler {
 
     private val viewModel: StockOpnameViewModel by activityViewModels()
-    private val dashboardViewModel: DashboardViewModel by activityViewModels()
-    private var isDocumentSelected: Boolean = true
+
     private var _binding: FragmentScanBinding? = null
     private val binding get() = _binding!!
-
+    @Inject
+    lateinit var soundManager: BeepSoundManager
     @Inject
     lateinit var reader: RFIDManager
 
@@ -60,6 +63,7 @@ class ScanFragment : Fragment() {
         // Inisialisasi adapter & RecyclerView
         tagAdapter = TagAdapter()
         binding.rvTag.adapter = tagAdapter
+        binding.rvTag.layoutManager = LinearLayoutManager(requireActivity())
 
         // Observasi data tag dari ViewModel
         viewLifecycleOwner.lifecycleScope.launch {
@@ -71,57 +75,21 @@ class ScanFragment : Fragment() {
 
         // Tombol start/stop scan
         binding.btnStartScan.setOnClickListener {
-            var isScanning = reader.isInventorying()
-            if (isScanning == true) {
-                viewModel.startScan()
-                binding.btnStartScan.apply {
-                    text = "STOP SCAN"
-                    setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark))
-                    setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
-                }
-                binding.fabValidate.visibility = View.VISIBLE
-            } else {
-                viewModel.stopScan()
-                binding.btnStartScan.apply {
-                    text = "START SCAN"
-                    setBackgroundColor(ContextCompat.getColor(requireContext(),R.color.md_theme_primary))
-                    setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
-                }
-                binding.fabValidate.visibility = View.GONE
-            }
+            startScan()
         }
 
         lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.assetStatusInfo.collect { (_, total) ->
                     binding.tvTotal.text = total.toString()
-                    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                    val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale("id", "ID"))
                     val currentDate = dateFormat.format(Date())
-                    binding.tvDate.text = currentDate
+                    binding.tvDate.text = "Tanggal $currentDate"
+
                 }
             }
         }
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                // Cek kondisi, misal sedang scanning
-                if (reader.isInventorying() == true) {
-                    Toast.makeText(requireContext(), "Hentikan scan terlebih dahulu!", Toast.LENGTH_SHORT).show()
-                } else {
-                    // Tampilkan dialog konfirmasi
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("Keluar Halaman?")
-                        .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
-                        .setPositiveButton("Ya") { _, _ ->
-                            findNavController().navigateUp()
-                            viewModel.clearScannedTags()
-                        }
-                        .setNegativeButton("Batal") { dialog, _ ->
-                            dialog.dismiss()
-                        }
-                        .show()
-                }
-            }
-        })
+
         binding.rvTag.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
@@ -136,88 +104,68 @@ class ScanFragment : Fragment() {
                 }
             }
         })
-
-
-
-
-        dashboardViewModel.isDocumentSelected.observe(viewLifecycleOwner) { isDocument ->
-            isDocumentSelected = isDocument
-            setupToolbar()
-
-            lifecycleScope.launch {
-                when (val result = viewModel.getBulkDocument(isDocument)) {
-                    is ResultWrapper.Loading -> {
-                        showLoadingDialog("Sinkronisasi data")
-                    }
-
-                    is ResultWrapper.Success -> {
-                        dismissLoadingDialog()
-                        Toast.makeText(requireContext(), "Sinkronisasi Data Berhasil", Toast.LENGTH_SHORT).show()
-                    }
-
-                    is ResultWrapper.Error -> {
-                        dismissLoadingDialog()
-                        Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT).show()
-                    }
-
-                    is ResultWrapper.ErrorResponse -> {
-                        dismissLoadingDialog()
-                        Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT).show()
-                    }
-
-                    is ResultWrapper.NetworkError -> {
-                        dismissLoadingDialog()
-                        Toast.makeText(requireActivity(), "Terjadi kesalahan pada jaringan, Harap periksa jaringan", Toast.LENGTH_SHORT).show()
-                    }
-                }
+        viewModel.soundBeep.observe(viewLifecycleOwner) {
+            if (it) {
+                soundManager.playBeep()
             }
         }
 
         binding.fabValidate.setOnClickListener {
-            // Buat dialog builder
-            val dialogView = LayoutInflater.from(requireContext())
-                .inflate(R.layout.dialog_loading_validate, null, false)
+            val isScanning = reader.isInventorying() == true
+            if (isScanning) {
+                Toast.makeText(requireContext(), "Hentikan scan terlebih dahulu!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }else{
+                // Buat dialog builder
+                val dialogView = LayoutInflater.from(requireContext())
+                    .inflate(R.layout.dialog_loading_validate, null, false)
 
-            val loadingDialog = MaterialAlertDialogBuilder(requireContext())
-                .setCancelable(false)
-                .setView(dialogView)
-                .create()
+                val loadingDialog = MaterialAlertDialogBuilder(requireContext())
+                    .setCancelable(false)
+                    .setView(dialogView)
+                    .create()
 
-            // Tampilkan dialog
-            loadingDialog.show()
+                // Tampilkan dialog
+                loadingDialog.show()
 
-            viewModel.validateAllTags {
-                loadingDialog.dismiss()
+                viewModel.validateAllTags {
+                    loadingDialog.dismiss()
 
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Validasi Selesai")
-                    .setMessage("Tag RFID telah divalidasi dengan database.")
-                    .setPositiveButton("OK"){ dialog, _ ->
-                        findNavController().navigate(R.id.action_scanFragment_to_stockOpnameFragment)
-                        dialog.dismiss()
-                    }
-                    .show()
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Validasi Selesai")
+                        .setMessage("Tag RFID telah divalidasi dengan database.")
+                        .setPositiveButton("OK"){ dialog, _ ->
+                            findNavController().navigateUp()
+                            dialog.dismiss()
+                        }
+                        .show()
+                }
             }
         }
-
-
-
     }
-    private var loadingDialog: AlertDialog? = null
 
-    private fun showLoadingDialog(message: String = "Sinkronisasi data") {
-        if (loadingDialog == null) {
-            loadingDialog = MaterialAlertDialogBuilder(requireContext())
-                .setView(R.layout.dialog_loading) // layout custom dengan ProgressBar
-                .setCancelable(false)
-                .create()
+    private fun startScan(){
+        val isScanning = reader.isInventorying() == true
+
+        if (!isScanning) {
+            // Mulai scan
+            viewModel.startScan()
+            binding.btnStartScan.apply {
+                text = "STOP SCAN"
+                setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark))
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+            }
+            binding.fabValidate.hide()
+        } else {
+            // Hentikan scan
+            viewModel.stopScan()
+            binding.btnStartScan.apply {
+                text = "START SCAN"
+                setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.md_theme_primary))
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+            }
+            binding.fabValidate.show()
         }
-        loadingDialog?.show()
-        loadingDialog?.findViewById<TextView>(R.id.tvLoadingMessage)?.text = message
-    }
-
-    private fun dismissLoadingDialog() {
-        loadingDialog?.dismiss()
     }
 
     private fun setupToolbar() {
@@ -229,25 +177,22 @@ class ScanFragment : Fragment() {
         binding.toolbarScan.setNavigationOnClickListener {
             if (reader.isInventorying() == true) {
                 Toast.makeText(requireContext(), "Hentikan scan terlebih dahulu!", Toast.LENGTH_SHORT).show()
-            } else {
-                // Tampilkan dialog konfirmasi
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Keluar Halaman?")
-                    .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
-                    .setPositiveButton("Ya") { _, _ ->
-                        findNavController().navigateUp()
-                        viewModel.clearScannedTags()
-                    }
-                    .setNegativeButton("Batal") { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    .show()
+            }else{
+                findNavController().navigateUp()
             }
         }
     }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun myOnKeyDown() {
+        startScan()
+    }
+
+    override fun myOnKeyUp() {
+
     }
 }
 

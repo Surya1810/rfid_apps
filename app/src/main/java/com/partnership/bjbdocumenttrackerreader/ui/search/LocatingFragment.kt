@@ -15,12 +15,13 @@ import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentLocatingBinding
 import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
+import com.partnership.bjbdocumenttrackerreader.reader.ReaderKeyEventHandler
 import com.partnership.bjbdocumenttrackerreader.ui.scan.StockOpnameViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class LocatingFragment : Fragment() {
+class LocatingFragment : Fragment(), ReaderKeyEventHandler {
 
     @Inject
     lateinit var soundManager: BeepSoundManager
@@ -29,6 +30,8 @@ class LocatingFragment : Fragment() {
     @Inject lateinit var reader : RFIDManager
 
     private var epc = ""
+
+
 
     private var _binding: FragmentLocatingBinding? = null
     private val binding get() = _binding!!
@@ -83,5 +86,20 @@ class LocatingFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun myOnKeyDown() {
+        reader.setPower(30)
+        reader.startLocatingTag(requireContext(),epc){value,valid ->
+            binding.llChart.setData(value)
+            if (valid){
+                soundManager.playBeep()
+            }
+        }
+        binding.btnStartScanRadar.isEnabled = false
+    }
+
+    override fun myOnKeyUp() {
+
     }
 }

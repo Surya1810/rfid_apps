@@ -4,8 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -34,19 +36,19 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class StockOpnameFragment : Fragment() {
 
-    private val stockOpnameViewModel: StockOpnameViewModel by viewModels()
+    private val stockOpnameViewModel: StockOpnameViewModel by activityViewModels()
     private val dashboardViewModel: DashboardViewModel by activityViewModels()
-
-    @Inject
-    lateinit var soundManager: BeepSoundManager
+    private var isDocumentSelected: Boolean = true
+    private var loadingDialog: AlertDialog? = null
     private var isDocument: Boolean = true
+
     @Inject
     lateinit var reader: RFIDManager
     private var _binding: FragmentStockOpnameBinding? = null
     private var message = ""
     private val binding get() = _binding!!
     private lateinit var assetAdapter: SoDocumentAdapter
-    private var epcList = mutableListOf<TagInfo>()
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -61,6 +63,17 @@ class StockOpnameFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
 
+        dashboardViewModel.isDocumentSelected.observe(viewLifecycleOwner) {
+            isDocument = it
+            isDocumentSelected = it
+            if (stockOpnameViewModel.listBulkDocument.value == null) {
+                lifecycleScope.launch {
+                    stockOpnameViewModel.getBulkDocument(it)
+                }
+            }
+        }
+        setupToolbar()
+        observeListDocument()
         binding.lyFound.setOnClickListener {
             stockOpnameViewModel.setIsThereFilter(true)
         }
@@ -73,31 +86,18 @@ class StockOpnameFragment : Fragment() {
             stockOpnameViewModel.setIsThereFilter(false)
         }
 
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                // Cek kondisi, misal sedang scanning
-                if (reader.isInventorying() == true) {
-                    Toast.makeText(requireContext(), "Hentikan scan terlebih dahulu!", Toast.LENGTH_SHORT).show()
-                } else {
-                    // Tampilkan dialog konfirmasi
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("Keluar Halaman?")
-                        .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
-                        .setPositiveButton("Ya") { _, _ ->
-                            findNavController().navigateUp()
-                        }
-                        .setNegativeButton("Batal") { dialog, _ ->
-                            dialog.dismiss()
-                        }
-                        .show()
-                }
-            }
-        })
+        binding.btScan.setOnClickListener {
+            findNavController().navigate(R.id.action_stockOpnameFragment_to_scanFragment)
+        }
 
         binding.btSend.setOnClickListener {
-            if (reader.isInventorying() == true){
-                Toast.makeText(requireActivity(), "Hentikan scanning terlebih dahulu", Toast.LENGTH_SHORT).show()
-            }else{
+            if (reader.isInventorying() == true) {
+                Toast.makeText(
+                    requireActivity(),
+                    "Hentikan scanning terlebih dahulu",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Konfirmasi Kirim")
                     .setMessage(message)
@@ -107,13 +107,21 @@ class StockOpnameFragment : Fragment() {
                             when (val result = stockOpnameViewModel.postStockOpname(isDocument)) {
                                 is ResultWrapper.Error -> {
                                     Utils.dismissLoading()
-                                    Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT)
+                                    Toast.makeText(
+                                        requireActivity(),
+                                        result.error,
+                                        Toast.LENGTH_SHORT
+                                    )
                                         .show()
                                 }
 
                                 is ResultWrapper.ErrorResponse -> {
                                     Utils.dismissLoading()
-                                    Toast.makeText(requireActivity(), result.error, Toast.LENGTH_SHORT)
+                                    Toast.makeText(
+                                        requireActivity(),
+                                        result.error,
+                                        Toast.LENGTH_SHORT
+                                    )
                                         .show()
                                 }
 
@@ -152,12 +160,34 @@ class StockOpnameFragment : Fragment() {
 
 
         }
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // Cek kondisi, misal sedang scanning
+                    if (reader.isInventorying() == true) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Hentikan scan terlebih dahulu!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        // Tampilkan dialog konfirmasi
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Keluar Halaman?")
+                            .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
+                            .setPositiveButton("Ya") { _, _ ->
+                                findNavController().navigateUp()
+                            }
+                            .setNegativeButton("Batal") { dialog, _ ->
+                                dialog.dismiss()
+                            }
+                            .show()
+                    }
+                }
+            })
 
-        stockOpnameViewModel.soundBeep.observe(viewLifecycleOwner) {
-            if (it) {
-                soundManager.playBeep()
-            }
-        }
+
         lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 stockOpnameViewModel.assetStatusInfo.collect { (detected, total) ->
@@ -181,6 +211,62 @@ class StockOpnameFragment : Fragment() {
         }
     }
 
+    private fun observeListDocument() {
+        stockOpnameViewModel.listBulkDocument.observe(viewLifecycleOwner) {
+            when (it) {
+                is ResultWrapper.Error<*> -> {
+                    dismissLoadingDialog()
+                    Toast.makeText(requireActivity(), it.error, Toast.LENGTH_SHORT).show()
+                }
+
+                is ResultWrapper.ErrorResponse<*> -> {
+                    dismissLoadingDialog()
+                    Toast.makeText(requireActivity(), it.error, Toast.LENGTH_SHORT).show()
+                }
+
+                ResultWrapper.Loading -> {
+                    showLoadingDialog()
+                }
+
+                is ResultWrapper.NetworkError<*> -> {
+                    dismissLoadingDialog()
+                    Toast.makeText(
+                        requireActivity(),
+                        "Terjadi kesalahan pada jaringan, Harap periksa jaringan",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                is ResultWrapper.Success -> {
+                    Toast.makeText(
+                        requireActivity(),
+                        "Sinkronisasi data berhasil",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                null -> {
+
+                }
+            }
+        }
+    }
+
+    private fun showLoadingDialog(message: String = "Sinkronisasi data") {
+        if (loadingDialog == null) {
+            loadingDialog = MaterialAlertDialogBuilder(requireContext())
+                .setView(R.layout.dialog_loading) // layout custom dengan ProgressBar
+                .setCancelable(false)
+                .create()
+        }
+        loadingDialog?.show()
+        loadingDialog?.findViewById<TextView>(R.id.tvLoadingMessage)?.text = message
+    }
+
+    private fun dismissLoadingDialog() {
+        loadingDialog?.dismiss()
+    }
+
     private fun setupRecyclerView() {
         assetAdapter = SoDocumentAdapter() {
 
@@ -196,25 +282,24 @@ class StockOpnameFragment : Fragment() {
         activity.setSupportActionBar(binding.toolbarScan)
         activity.setupActionBarWithNavController(findNavController())
 
-        binding.toolbarScan.setTitle(if (isDocument) "Stock Opname Dokumen" else "Stock Opname Agunan")
+        binding.toolbarScan.setTitle(if (isDocument) "Scan Dokumen" else "Scan Agunan")
 
         binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
         binding.toolbarScan.setNavigationOnClickListener {
-            if (reader.isInventorying() == true) {
-                Toast.makeText(requireContext(), "Hentikan scan terlebih dahulu!", Toast.LENGTH_SHORT).show()
-            } else {
-                // Tampilkan dialog konfirmasi
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Keluar Halaman?")
-                    .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
-                    .setPositiveButton("Ya") { _, _ ->
-                        findNavController().navigateUp()
-                    }
-                    .setNegativeButton("Batal") { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    .show()
-            }
+            // Tampilkan dialog konfirmasi
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Keluar Halaman?")
+                .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
+                .setPositiveButton("Ya") { _, _ ->
+                    stockOpnameViewModel.clearScannedTags()
+                    stockOpnameViewModel.clearBulkDocument()
+                    findNavController().navigateUp()
+                }
+                .setNegativeButton("Batal") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
+
         }
     }
 
@@ -222,7 +307,6 @@ class StockOpnameFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        epcList.clear()
     }
 
 }

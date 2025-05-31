@@ -118,13 +118,13 @@ class HomeFragment : Fragment() {
 
         btnDocument?.setOnClickListener {
             viewModel.setIsDocument(true)
-            findNavController().navigate(R.id.action_homeFragment_to_scanFragment)
+            findNavController().navigate(R.id.action_homeFragment_to_stockOpnameFragment)
             dialog.dismiss()
         }
 
         btnAgunan?.setOnClickListener {
             viewModel.setIsDocument(false)
-            findNavController().navigate(R.id.action_homeFragment_to_scanFragment)
+            findNavController().navigate(R.id.action_homeFragment_to_stockOpnameFragment)
             dialog.dismiss()
         }
     }

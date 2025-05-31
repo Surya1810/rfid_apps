@@ -197,10 +197,6 @@ class RFIDRepositoryImpl @Inject constructor(
         assetDao.updateIsThere(rfidNumber, status)
     }
 
-    suspend fun getAssetByRfid(rfidNumber: String): AssetEntity? {
-        return assetDao.getAssetByRfid(rfidNumber)
-    }
-
     fun observeDetectedAssets(): Flow<Int> {
         return assetDao.observeDetectedAssets()
     }
@@ -218,10 +214,6 @@ class RFIDRepositoryImpl @Inject constructor(
 
     suspend fun getStockOpnameItems(): List<AssetStatus> {
         return assetDao.getStockOpnameItems()
-    }
-
-    suspend fun getAllValidEpcs(): List<String> {
-        return assetDao.getAllRfidNumber()
     }
 
     fun isAssetThere(epc:String):Boolean{

@@ -11,6 +11,7 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:expandedTitleGravity="top"
         app:liftOnScroll="false"
         android:background="?attr/colorPrimary"
         android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar">
@@ -19,16 +20,26 @@
             android:id="@+id/collapsingToolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            style="?attr/collapsingToolbarLayoutStyle"
             app:titleCollapseMode="scale"
             app:expandedTitleTextColor="@color/white"
             app:expandedTitleGravity="top"
             app:expandedTitleMarginStart="42dp"
             app:expandedTitleMarginTop="18dp"
             app:collapsedTitleTextColor="@color/white">
-
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbarScan"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"
+                android:backgroundTint="@color/md_theme_primary"
+                app:collapsedTitleTextColor="@color/white"
+                app:title="Scan"
+                app:navigationIcon="@drawable/arrow_back_ios_24px" />
             <!-- ConstraintLayout / LinearLayout isi lain -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardView4"
+                app:layout_collapseMode="parallax"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="?attr/actionBarSize"
@@ -70,7 +81,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Total Dokumen"
+                            android:text="Dokumen"
                             android:textColor="@color/black"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -93,17 +104,10 @@
 
                         <TextView
                             android:id="@+id/tvDate"
-                            android:layout_width="wrap_content"
+                            android:layout_width="50dp"
                             android:layout_height="wrap_content"
                             android:text="0/0/0000"
-                            android:textColor="@color/black"
-                            android:textSize="12sp" />
-
-                        <TextView
-                            android:layout_width="70dp"
-                            android:layout_height="wrap_content"
                             android:textAlignment="center"
-                            android:text="Tanggal"
                             android:textColor="@color/black"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -113,14 +117,7 @@
             </androidx.cardview.widget.CardView>
 
             <!-- Toolbar -->
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbarScan"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                app:layout_collapseMode="pin"
-                app:collapsedTitleTextColor="@color/white"
-                app:title="Scan"
-                app:navigationIcon="@drawable/arrow_back_ios_24px" />
+
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -130,7 +127,7 @@
             android:paddingHorizontal="16dp"
             android:paddingTop="8dp"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent">
             <Button
                 android:id="@+id/btnStartScan"
                 android:layout_width="match_parent"
@@ -163,7 +160,8 @@
                 android:id="@+id/rvTag"
                 tools:listitem="@layout/rv_tag"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
         </LinearLayout>
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fabValidate"

@@ -27,8 +27,8 @@
             android:id="@+id/action_homeFragment_to_listLostFragment"
             app:destination="@id/listLostFragment" />
         <action
-            android:id="@+id/action_homeFragment_to_scanFragment"
-            app:destination="@id/scanFragment" />
+            android:id="@+id/action_homeFragment_to_stockOpnameFragment"
+            app:destination="@id/stockOpnameFragment" />
     </fragment>
     <fragment
         android:id="@+id/stockOpnameFragment"
@@ -36,8 +36,8 @@
         android:label="SCAN"
         tools:layout="@layout/fragment_stock_opname" >
         <action
-            android:id="@+id/action_scanFragment_to_settingReaderFragment"
-            app:destination="@id/settingReaderFragment" />
+            android:id="@+id/action_stockOpnameFragment_to_scanFragment"
+            app:destination="@id/scanFragment" />
     </fragment>
     <fragment
         android:id="@+id/settingReaderFragment"
@@ -80,11 +80,6 @@
     <fragment
         android:id="@+id/scanFragment"
         android:name="com.partnership.bjbdocumenttrackerreader.ui.scan.ScanFragment"
-        android:label="fragment_scan"
-        tools:layout="@layout/fragment_scan" >
-
-        <action
-            android:id="@+id/action_scanFragment_to_stockOpnameFragment"
-            app:destination="@id/stockOpnameFragment" />
-    </fragment>
+        android:label="Scan"
+        tools:layout="@layout/fragment_scan" />
 </navigation>
