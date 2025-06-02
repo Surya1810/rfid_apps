@@ -62,7 +62,7 @@ class StockOpnameFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-
+        stockOpnameViewModel.clearScannedTags()
         dashboardViewModel.isDocumentSelected.observe(viewLifecycleOwner) {
             isDocument = it
             isDocumentSelected = it
@@ -140,6 +140,8 @@ class StockOpnameFragment : Fragment() {
 
                                 is ResultWrapper.Success -> {
                                     Utils.dismissLoading()
+                                    //stockOpnameViewModel.clearScannedTags()
+                                    stockOpnameViewModel.clearBulkDocument()
                                     Toast.makeText(
                                         requireActivity(),
                                         "Stock Opname Berhasil",
@@ -177,7 +179,10 @@ class StockOpnameFragment : Fragment() {
                             .setTitle("Keluar Halaman?")
                             .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
                             .setPositiveButton("Ya") { _, _ ->
+                                //stockOpnameViewModel.clearScannedTags()
+                                stockOpnameViewModel.clearBulkDocument()
                                 findNavController().navigateUp()
+
                             }
                             .setNegativeButton("Batal") { dialog, _ ->
                                 dialog.dismiss()
@@ -291,7 +296,7 @@ class StockOpnameFragment : Fragment() {
                 .setTitle("Keluar Halaman?")
                 .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
                 .setPositiveButton("Ya") { _, _ ->
-                    stockOpnameViewModel.clearScannedTags()
+                    //stockOpnameViewModel.clearScannedTags()
                     stockOpnameViewModel.clearBulkDocument()
                     findNavController().navigateUp()
                 }

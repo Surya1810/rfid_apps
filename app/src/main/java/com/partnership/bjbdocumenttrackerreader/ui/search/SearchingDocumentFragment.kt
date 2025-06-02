@@ -12,6 +12,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -22,6 +23,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.partnership.bjbdocumenttrackerreader.MainActivity
 import com.partnership.bjbdocumenttrackerreader.R
@@ -64,7 +66,6 @@ class SearchingDocumentFragment : Fragment() {
         setUpMenu()
 
         searchViewModel.isFound.observe(viewLifecycleOwner) {
-            Log.e("isFound", it.toString(), )
             isFound = it
             if (it) {
                 if (it) {
@@ -76,17 +77,37 @@ class SearchingDocumentFragment : Fragment() {
                     binding.tvState.setTextColor(ContextCompat.getColor(binding.root.context, R.color.accent_bad))
                     binding.lyState.setCardBackgroundColor(ContextCompat.getColor(binding.root.context, R.color.state_bad))
                 }
-                searchViewModel.stopReadTag()
-
                 updateScanButtonUI(isScanning = false)
                 if (it){
-                    soundManager.playBeep()
                     binding.lyLocating.visibility = View.VISIBLE
                 }else{
                     binding.lyLocating.visibility = View.GONE
                 }
             }
         }
+
+        searchViewModel.soundBeep.observe (viewLifecycleOwner){
+            if (it){
+                soundManager.playBeep()
+            }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // Cek kondisi, misal sedang scanning
+                    if (searchViewModel.isScanning.value == true) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Hentikan scan terlebih dahulu!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                       findNavController().navigateUp()
+                    }
+                }
+            })
 
         stockOpnameViewModel.searchDocumentEpc.observe(viewLifecycleOwner){
             setDataToView(it)
@@ -247,7 +268,12 @@ class SearchingDocumentFragment : Fragment() {
 
         binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
         binding.toolbarScan.setNavigationOnClickListener {
-            findNavController().navigateUp()
+            if (searchViewModel.isScanning.value == true) {
+                Toast.makeText(requireContext(), "Hentikan Scan Terlebih Dahulu!", Toast.LENGTH_SHORT).show()
+            }else{
+                findNavController().navigateUp()
+            }
+
         }
     }
 

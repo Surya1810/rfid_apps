@@ -21,7 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class LocatingFragment : Fragment(), ReaderKeyEventHandler {
+class LocatingFragment : Fragment() {
 
     @Inject
     lateinit var soundManager: BeepSoundManager
@@ -88,18 +88,4 @@ class LocatingFragment : Fragment(), ReaderKeyEventHandler {
         _binding = null
     }
 
-    override fun myOnKeyDown() {
-        reader.setPower(30)
-        reader.startLocatingTag(requireContext(),epc){value,valid ->
-            binding.llChart.setData(value)
-            if (valid){
-                soundManager.playBeep()
-            }
-        }
-        binding.btnStartScanRadar.isEnabled = false
-    }
-
-    override fun myOnKeyUp() {
-
-    }
 }

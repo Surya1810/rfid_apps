@@ -68,10 +68,6 @@ class StockOpnameViewModel @Inject constructor(
 
     private var hasInitReader = false
 
-    fun setSoundToFalse() {
-        _soundBeep.value = false
-    }
-
     fun initReader(context: Context) {
         if (hasInitReader) return
         hasInitReader = true
@@ -192,20 +188,18 @@ class StockOpnameViewModel @Inject constructor(
     val scannedTags: StateFlow<List<TagInfo>> get() = _scannedTags
 
     fun startScan() {
-        reader.readTagAuto { newTag ->
-            val tagInfo = TagInfo(
-                epc = newTag.epc,
-                rssi = newTag.rssi
-            )
-            insertTagOrdered(tagInfo)
+        Handler(Looper.getMainLooper()).post {
+            reader.readTagAuto { newTag ->
+                val tagInfo = TagInfo(
+                    epc = newTag.epc,
+                    rssi = newTag.rssi
+                )
+                insertTagOrdered(tagInfo)
+            }
         }
     }
 
-    fun stopScan(){
-        if (reader.isInventorying() == true){
-            reader.stopReadTag()
-        }
-    }
+
 
     private fun insertTagOrdered(newTag: TagInfo) {
         val currentList = _scannedTags.value.toMutableList()
@@ -223,11 +217,13 @@ class StockOpnameViewModel @Inject constructor(
     }
 
     fun clearScannedTags() {
-        Log.d(TAG, "clearScannedTags() dipanggil, jumlah tag sebelum dihapus: ${_scannedTags.value.size}")
         _scannedTags.value = emptyList()
-        Log.d(TAG, "clearScannedTags() selesai, jumlah tag setelah dihapus: ${_scannedTags.value.size}")
     }
-
+    fun stopScan(){
+        if (reader.isInventorying() == true){
+            reader.stopReadTag()
+        }
+    }
 
     fun validateAllTags(onDone: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {

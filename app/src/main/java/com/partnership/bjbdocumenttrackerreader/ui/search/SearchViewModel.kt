@@ -20,6 +20,7 @@ import com.partnership.bjbdocumenttrackerreader.data.model.DetailAgunan
 import com.partnership.bjbdocumenttrackerreader.data.model.Document
 import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
 import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepositoryImpl
+import com.partnership.bjbdocumenttrackerreader.util.SingleLiveEvent
 import com.partnership.rfid.data.model.UploadData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -38,19 +39,29 @@ class SearchViewModel @Inject constructor(private val repository: RFIDRepository
     private val _isFound = MutableLiveData<Boolean>()
     val isFound : LiveData<Boolean> get() = _isFound
 
+    private val _soundBeep = SingleLiveEvent<Boolean>()
+    val soundBeep: LiveData<Boolean> get() = _soundBeep
+
+
     suspend fun postLostDocument(postLostDocument: PostLostDocument): ResultWrapper<BaseResponse<Unit>> {
         return repository.postLostDocument(postLostDocument)
     }
 
-    fun searchSingleTag(epc: String){
+    fun searchSingleTag(epc: String) {
         _isScanning.value = true
-        reader.readTagAuto {uhftagInfo ->
-            if (uhftagInfo.epc == epc){
+        var isFound = false // local flag, bukan LiveData
+
+        reader.readTagAuto { uhfTagInfo ->
+            if (!isFound && uhfTagInfo.epc == epc) {
+                isFound = true
+                _soundBeep.postValue(true)
                 _isFound.postValue(true)
                 _isScanning.postValue(false)
+                reader.stopReadTag()
             }
         }
     }
+
 
     fun stopReadTag(){
         _isScanning.value = false
