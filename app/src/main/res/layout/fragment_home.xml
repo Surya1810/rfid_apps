@@ -247,6 +247,24 @@
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@+id/btSearchDocument" />
 
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btManualBook"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="8dp"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
+                            android:backgroundTint="@color/md_theme_yellow"
+                            android:text="Manual Book RFID Reader"
+                            android:textColor="@color/md_theme_primary"
+                            app:icon="@drawable/baseline_menu_book_24"
+                            app:iconTint="@color/md_theme_primary"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/btSearchAgunan" />
+
                         <com.google.android.material.divider.MaterialDivider
                             android:id="@+id/materialDivider2"
                             android:layout_width="wrap_content"
@@ -254,7 +272,7 @@
                             android:layout_marginTop="16dp"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/btSearchAgunan" />
+                            app:layout_constraintTop_toBottomOf="@+id/btManualBook" />
 
                         <TextView
                             android:id="@+id/textView9"

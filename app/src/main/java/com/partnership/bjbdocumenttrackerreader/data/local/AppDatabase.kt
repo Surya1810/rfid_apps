@@ -8,7 +8,7 @@ import com.partnership.bjbdocumenttrackerreader.data.local.dao.AssetDao
 import com.partnership.bjbdocumenttrackerreader.data.local.entity.AssetEntity
 
 
-@Database(entities = [AssetEntity::class], version = 1, exportSchema = false)
+@Database(entities = [AssetEntity::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun assetDao(): AssetDao

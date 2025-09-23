@@ -11,6 +11,7 @@ data class Document(
     val noDoc: String,
     val rfid: String,
     val cif: String? = null,
+    val noRef: String,
     val name: String,
     val segment: String? = null,
     val amountAgunan: Int? = null,
@@ -36,7 +37,8 @@ fun GetBulkDocument.toEntityList(): List<AssetEntity> {
             segment = document.segment,
             amountAgunan = document.amountAgunan,
             location = document.location,
-            isThere = document.isThere
+            isThere = document.isThere,
+            noRef = document.noRef
         )
     }
 }

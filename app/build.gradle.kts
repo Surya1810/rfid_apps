@@ -73,6 +73,10 @@ dependencies {
     implementation("androidx.room:room-paging:2.7.0")
 
     kapt("androidx.room:room-compiler:2.7.0")
+
+    implementation("com.github.mhiew:android-pdf-viewer:3.2.0-beta.3") {
+        exclude(group = "com.android.support", module = null)
+    }
 }
 
 kapt {

@@ -1,6 +1,8 @@
 package com.partnership.bjbdocumenttrackerreader.ui.home
 
 import android.content.ContentValues.TAG
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -23,6 +25,7 @@ import com.partnership.bjbdocumenttrackerreader.ui.adapter.DocumentAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import java.text.NumberFormat
 import java.util.Locale
+import androidx.core.net.toUri
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -62,6 +65,14 @@ class HomeFragment : Fragment() {
         binding.btSearchDocument.setOnClickListener {
             findNavController().navigate(R.id.action_homeFragment_to_searchDocumentFragment)
             viewModel.setIsDocument(true)
+        }
+
+        binding.btManualBook.setOnClickListener {
+            val url = "http://192.168.0.101:5000/template/manual_book.pdf"
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = url.toUri()
+            }
+            requireActivity().startActivity(intent)
         }
 
         viewModel.dataDashboard.observe(viewLifecycleOwner) {

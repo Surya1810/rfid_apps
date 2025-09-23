@@ -29,6 +29,9 @@
         <action
             android:id="@+id/action_homeFragment_to_stockOpnameFragment"
             app:destination="@id/stockOpnameFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_manualBookFragment"
+            app:destination="@id/manualBookFragment" />
     </fragment>
     <fragment
         android:id="@+id/stockOpnameFragment"
@@ -82,4 +85,9 @@
         android:name="com.partnership.bjbdocumenttrackerreader.ui.scan.ScanFragment"
         android:label="Scan"
         tools:layout="@layout/fragment_scan" />
+    <fragment
+        android:id="@+id/manualBookFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.book.ManualBookFragment"
+        android:label="fragment_pdf_view"
+        tools:layout="@layout/fragment_pdf_view" />
 </navigation>

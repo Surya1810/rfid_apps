@@ -23,7 +23,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "asset_database"
         )
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(true)
             .build()
     }
 

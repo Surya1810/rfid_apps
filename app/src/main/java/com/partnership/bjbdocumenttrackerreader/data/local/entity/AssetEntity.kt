@@ -10,6 +10,7 @@ data class AssetEntity(
     @PrimaryKey val id: Int,
     val noDoc: String,
     val rfid: String,
+    val noRef: String,
     val cif: String? = null,
     val name: String,
     val segment: String? = null,
