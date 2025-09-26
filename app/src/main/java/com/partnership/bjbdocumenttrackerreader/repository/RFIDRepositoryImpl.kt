@@ -10,6 +10,7 @@ import com.partnership.bjbdocumenttrackerreader.data.model.AssetStatus
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import com.partnership.bjbdocumenttrackerreader.data.model.GetBulkDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
+import com.partnership.bjbdocumenttrackerreader.data.model.GetListTutorialVideo
 import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.PostStockOpname
 import com.partnership.bjbdocumenttrackerreader.data.model.toEntityList
@@ -193,7 +194,28 @@ class RFIDRepositoryImpl @Inject constructor(
         }
     }
 
-   fun updateIsThere(rfidNumber: String, status: Boolean) {
+    override suspend fun getListTutorialVideo(): ResultWrapper<BaseResponse<GetListTutorialVideo>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getListTutorialVideo()
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null) {
+                        ResultWrapper.Success(body)
+
+                    } else {
+                        ResultWrapper.Error("Response body is null")
+                    }
+                } else {
+                    ResultWrapper.Error("Error: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                ResultWrapper.Error(e.message ?: "Unknown Error")
+            }
+        }
+    }
+
+    fun updateIsThere(rfidNumber: String, status: Boolean) {
         assetDao.updateIsThere(rfidNumber, status)
     }
 

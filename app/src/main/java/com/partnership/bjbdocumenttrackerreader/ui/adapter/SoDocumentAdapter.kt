@@ -29,7 +29,7 @@ class SoDocumentAdapter(
                 binding.lyState.setCardBackgroundColor(ContextCompat.getColor(binding.root.context, R.color.state_bad))
             }
             binding.tvNameDocument.text = item.name
-            binding.tvNoRef.text = item.noRef
+            binding.tvNoRef.text = "No.Ref : ${item.noRef}"
             binding.tvRfid.text = "RFID : ${item.rfid}"
             binding.tvNoCif.text = "CIF : ${item.cif}"
 

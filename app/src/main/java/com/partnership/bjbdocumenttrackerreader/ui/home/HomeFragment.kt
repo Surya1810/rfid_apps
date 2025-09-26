@@ -57,14 +57,13 @@ class HomeFragment : Fragment() {
             setRefreshing(true)
         }
 
-        binding.btSearchAgunan.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_searchDocumentFragment)
-            viewModel.setIsDocument(false)
-        }
 
         binding.btSearchDocument.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_searchDocumentFragment)
-            viewModel.setIsDocument(true)
+            showDialogSearch()
+        }
+
+        binding.btVideoManual.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_manualBookFragment)
         }
 
         binding.btManualBook.setOnClickListener {
@@ -140,7 +139,30 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun showDialogSearch() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_select_type, null)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .setTitle("Pilih Tipe Dokumen")
+            .create()
 
+        dialog.show() // tampilkan dulu, baru findViewById dari dialog
+
+        val btnDocument = dialog.findViewById<Button>(R.id.btnDocument)
+        val btnAgunan = dialog.findViewById<Button>(R.id.btnAgunan)
+
+        btnDocument?.setOnClickListener {
+            viewModel.setIsDocument(true)
+            findNavController().navigate(R.id.action_homeFragment_to_searchDocumentFragment)
+            dialog.dismiss()
+        }
+
+        btnAgunan?.setOnClickListener {
+            viewModel.setIsDocument(false)
+            findNavController().navigate(R.id.action_homeFragment_to_searchDocumentFragment)
+            dialog.dismiss()
+        }
+    }
 
     private fun setData(dashboardData: GetDashboard){
         binding.tvLts.text = dashboardData.overview.lastTimeScan

@@ -3,6 +3,7 @@ package com.partnership.bjbdocumenttrackerreader.data.network
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import com.partnership.bjbdocumenttrackerreader.data.model.GetBulkDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
+import com.partnership.bjbdocumenttrackerreader.data.model.GetListTutorialVideo
 import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.PostStockOpname
 import retrofit2.Response
@@ -43,5 +44,7 @@ interface ApiService {
         @Body postLostDocument: PostLostDocument
     ): Response<BaseResponse<Unit>>
 
+    @GET("api/manuals/videos")
+    suspend fun getListTutorialVideo(): Response<BaseResponse<GetListTutorialVideo>>
 
 }

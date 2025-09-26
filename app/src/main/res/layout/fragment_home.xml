@@ -23,7 +23,7 @@
             android:background="@color/md_theme_primary"
             android:elevation="0dp"
             app:elevation="0dp"
-            app:title="BJB Document Tracker"
+            app:title="BJB DMS"
             app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -230,24 +230,6 @@
                             app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
 
                         <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btSearchAgunan"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="8dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginTop="16dp"
-                            android:layout_marginEnd="8dp"
-                            android:layout_weight="1"
-                            android:backgroundTint="@color/md_theme_yellow"
-                            android:text="Pencarian Agunan"
-                            android:textColor="@color/md_theme_primary"
-                            app:icon="@drawable/search_24px"
-                            app:iconTint="@color/md_theme_primary"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/btSearchDocument" />
-
-                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btManualBook"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -257,14 +239,30 @@
                             android:layout_marginEnd="8dp"
                             android:layout_weight="1"
                             android:backgroundTint="@color/md_theme_yellow"
-                            android:text="Manual Book RFID Reader"
+                            android:text="Buku Panduan DMS"
                             android:textColor="@color/md_theme_primary"
                             app:icon="@drawable/baseline_menu_book_24"
                             app:iconTint="@color/md_theme_primary"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/btSearchAgunan" />
-
+                            app:layout_constraintTop_toBottomOf="@+id/btSearchDocument" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btVideoManual"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="8dp"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
+                            android:backgroundTint="@color/md_theme_yellow"
+                            android:text="Video Panduan DMS"
+                            android:textColor="@color/md_theme_primary"
+                            app:icon="@drawable/outline_video_settings_24"
+                            app:iconTint="@color/md_theme_primary"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/btManualBook" />
                         <com.google.android.material.divider.MaterialDivider
                             android:id="@+id/materialDivider2"
                             android:layout_width="wrap_content"
@@ -272,7 +270,7 @@
                             android:layout_marginTop="16dp"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/btManualBook" />
+                            app:layout_constraintTop_toBottomOf="@+id/btVideoManual" />
 
                         <TextView
                             android:id="@+id/textView9"

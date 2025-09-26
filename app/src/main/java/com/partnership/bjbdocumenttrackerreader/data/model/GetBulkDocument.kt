@@ -8,7 +8,7 @@ data class GetBulkDocument(
 
 data class Document(
     val id: Int,
-    val noDoc: String,
+    val noDoc: String? = "-",
     val rfid: String,
     val cif: String? = null,
     val noRef: String,
@@ -30,7 +30,7 @@ fun GetBulkDocument.toEntityList(): List<AssetEntity> {
     return documents.map { document ->
         AssetEntity(
             id = document.id,
-            noDoc = document.noDoc,
+            noDoc =if (document.noDoc.isNullOrEmpty()) "-" else document.noDoc,
             rfid = document.rfid,
             cif = document.cif,
             name = document.name,

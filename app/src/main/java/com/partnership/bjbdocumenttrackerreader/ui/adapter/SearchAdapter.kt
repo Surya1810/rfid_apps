@@ -20,8 +20,10 @@ class SearchAdapter(
     inner class SearchViewHolder(val binding: RvDocumentBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: Document) {
             binding.tvNameDocument.text = item.name
-            binding.tvCIF.text = item.cif
-            binding.tvRfid.text = item.rfid
+            binding.tvNoRef.text = item.noRef
+            binding.tvRfid.text = "RFID : ${item.rfid}"
+            binding.tvNoCif.text = "CIF : ${item.cif}"
+            binding.tvNoDoc.text = "No.Doc : ${item.noDoc}"
             binding.tvBaris.text = item.location?.row
             binding.tvBox.text = item.location?.box
             binding.tvRak.text = item.location?.rack

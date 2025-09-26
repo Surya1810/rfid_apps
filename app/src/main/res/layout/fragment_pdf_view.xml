@@ -23,18 +23,19 @@
             android:background="?attr/colorPrimary"
             app:elevation="0dp"
             app:navigationIcon="@drawable/arrow_back_ios_24px"
-            app:title="Manual Book Reader"
+            app:title="Video Tutorial"
             app:titleTextColor="@color/white" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <com.github.barteksc.pdfviewer.PDFView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvTutorial"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:id="@+id/pdfView"
+        tools:listitem="@layout/rv_list_tutorial"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appBarLayout" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

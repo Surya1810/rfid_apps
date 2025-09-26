@@ -8,7 +8,7 @@ import com.partnership.bjbdocumenttrackerreader.data.model.Location
 @Entity(tableName = "assets")
 data class AssetEntity(
     @PrimaryKey val id: Int,
-    val noDoc: String,
+    val noDoc: String = "-",
     val rfid: String,
     val noRef: String,
     val cif: String? = null,
