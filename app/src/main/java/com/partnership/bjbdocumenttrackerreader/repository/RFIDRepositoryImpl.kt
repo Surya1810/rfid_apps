@@ -215,6 +215,69 @@ class RFIDRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun postStockOpnameChunked(
+        type: String,
+        allStatuses: List<AssetStatus>,
+        chunkSize: Int,
+        onProgress: (Int, Int) -> Unit
+    ): ResultWrapper<BaseResponse<Unit>> = withContext(Dispatchers.IO) {
+        if (allStatuses.isEmpty()) {
+            return@withContext ResultWrapper.Error("List stockOpname kosong")
+        }
+        if (chunkSize <= 0) {
+            return@withContext ResultWrapper.Error("chunkSize harus > 0")
+        }
+
+        val chunks: List<List<AssetStatus>> = allStatuses.chunked(chunkSize)
+        val total = chunks.size
+        var lastSuccessBody: BaseResponse<Unit>? = null
+
+        val scanCode = getScanCode()
+
+        for ((index, part) in chunks.withIndex()) {
+            onProgress(index + 1, total)
+
+            // panggil API untuk chunk ini
+            val result = try {
+                val resp = apiService.postStockOpname(type, PostStockOpname(scanCode,part))
+                if (resp.isSuccessful) {
+                    val body = resp.body()
+                    if (body != null) {
+                        lastSuccessBody = body
+                        null // null artinya tidak ada error
+                    } else {
+                        "Response body is null (chunk ${index + 1}/$total, size=${part.size})"
+                    }
+                } else {
+                    val msg = resp.errorBody()?.string()?.take(500) ?: "Unknown error"
+                    "HTTP ${resp.code()} - $msg (chunk ${index + 1}/$total, size=${part.size})"
+                }
+            } catch (e: IOException) {
+                "Network Error: ${e.localizedMessage} (chunk ${index + 1}/$total, size=${part.size})"
+            } catch (e: Exception) {
+                "System Error: ${e.localizedMessage} (chunk ${index + 1}/$total, size=${part.size})"
+            }
+
+            if (result != null) {
+                // berhenti di sini kalau ada error di chunk ke-(index+1)
+                return@withContext ResultWrapper.Error(result)
+            }
+        }
+
+        // semua chunk sukses
+        if (lastSuccessBody != null) {
+            ResultWrapper.Success(lastSuccessBody)
+        } else {
+            // sangat kecil kemungkinan terjadi (kalau server selalu null body)
+            ResultWrapper.Error("Semua chunk terkirim tapi tidak ada body sukses dari server")
+        }
+    }
+
+    suspend fun getScanCode(): String {
+        return assetDao.getScanCode()
+    }
+
+
     fun updateIsThere(rfidNumber: String, status: Boolean) {
         assetDao.updateIsThere(rfidNumber, status)
     }

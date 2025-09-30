@@ -6,9 +6,9 @@
     android:gravity="center">
 
     <ProgressBar
+        android:id="@+id/progressCircular"
         android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:indeterminate="true" />
+        android:layout_height="48dp"/>
 
     <TextView
         android:id="@+id/tvLoadingMessage"

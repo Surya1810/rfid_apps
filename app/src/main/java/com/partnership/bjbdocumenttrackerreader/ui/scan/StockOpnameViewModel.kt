@@ -25,6 +25,7 @@ import com.partnership.bjbdocumenttrackerreader.util.SingleLiveEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -178,10 +179,57 @@ class StockOpnameViewModel @Inject constructor(
         _getBulkDocument.value = null
     }
 
-    suspend fun postStockOpname(isDocument: Boolean): ResultWrapper<BaseResponse<Unit>> {
+    /*suspend fun postStockOpname(isDocument: Boolean): ResultWrapper<BaseResponse<Unit>> {
         val type = if (isDocument) "document" else "agunan"
         val dataBulk = repository.getStockOpnameItems()
         return repository.postStockOpname(type, PostStockOpname(dataBulk))
+    }*/
+
+    data class UploadProgress(val current: Int, val total: Int) {
+        val percent: Int get() = if (total == 0) 0 else ((current * 100f) / total).toInt()
+    }
+
+    // bisa dipakai di Compose via collectAsState()
+    private val _isUploading = MutableStateFlow(false)
+    val isUploading: StateFlow<Boolean> = _isUploading
+
+    private val _progress = MutableStateFlow(UploadProgress(0, 0))
+    val progress: StateFlow<UploadProgress> = _progress
+
+    private val _uploadResult =
+        MutableStateFlow<ResultWrapper<BaseResponse<Unit>>?>(null)
+    val uploadResult: StateFlow<ResultWrapper<BaseResponse<Unit>>?> = _uploadResult
+    private var uploadJob: Job? = null
+    fun postStockOpnameChunked(
+        isDocument: Boolean,
+        chunkSize: Int = 500
+    ) {
+        uploadJob?.cancel()
+        uploadJob = viewModelScope.launch {
+            _isUploading.value = true
+            _progress.value = UploadProgress(0, 0)
+            _uploadResult.value = null
+
+            val type = if (isDocument) "document" else "agunan"
+            val allStatuses = repository.getStockOpnameItems()
+
+            if (allStatuses.isEmpty()) {
+                _uploadResult.value = ResultWrapper.Error("Data stock opname kosong")
+                _isUploading.value = false
+                return@launch
+            }
+
+            val result = repository.postStockOpnameChunked(
+                type = type,
+                allStatuses = allStatuses,
+                chunkSize = chunkSize
+            ) { current, total ->
+                _progress.value = UploadProgress(current, total)
+            }
+
+            _uploadResult.value = result
+            _isUploading.value = false
+        }
     }
 
     private val _scannedTags = MutableStateFlow<List<TagInfo>>(emptyList())

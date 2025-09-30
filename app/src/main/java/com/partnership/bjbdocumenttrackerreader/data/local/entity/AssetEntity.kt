@@ -9,8 +9,9 @@ import com.partnership.bjbdocumenttrackerreader.data.model.Location
 data class AssetEntity(
     @PrimaryKey val id: Int,
     val noDoc: String = "-",
+    val scanCode: String,
     val rfid: String,
-    val noRef: String,
+    val noRef: String? = null,
     val cif: String? = null,
     val name: String,
     val segment: String? = null,

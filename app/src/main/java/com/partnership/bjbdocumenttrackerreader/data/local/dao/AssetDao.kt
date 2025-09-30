@@ -31,9 +31,11 @@ interface AssetDao {
         isThere: Boolean?
     ): PagingSource<Int, AssetEntity>
 
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(assets: List<AssetEntity>)
+
+    @Query("SELECT scanCode FROM assets ORDER BY id DESC LIMIT 1")
+    suspend fun getScanCode(): String
 
     @Query("SELECT COUNT(*) FROM assets WHERE isThere = 1")
     fun observeDetectedAssets(): Flow<Int>

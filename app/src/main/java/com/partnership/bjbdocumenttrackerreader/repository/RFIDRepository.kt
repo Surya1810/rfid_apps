@@ -1,6 +1,7 @@
 package com.partnership.bjbdocumenttrackerreader.repository
 
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
+import com.partnership.bjbdocumenttrackerreader.data.model.AssetStatus
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import com.partnership.bjbdocumenttrackerreader.data.model.GetBulkDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
@@ -18,4 +19,11 @@ interface RFIDRepository {
     suspend fun searchAsset(type:String,search:String? = null):ResultWrapper<BaseResponse<GetBulkDocument>>
     suspend fun postLostDocument(postLostDocument: PostLostDocument): ResultWrapper<BaseResponse<Unit>>
     suspend fun getListTutorialVideo(): ResultWrapper<BaseResponse<GetListTutorialVideo>>
+
+    suspend fun postStockOpnameChunked(
+        type: String,
+        allStatuses: List<AssetStatus>,
+        chunkSize: Int = 500,
+        onProgress: (currentChunk: Int, totalChunks: Int) -> Unit = { _, _ -> }
+    ): ResultWrapper<BaseResponse<Unit>>
 }

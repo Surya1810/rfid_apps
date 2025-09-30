@@ -6,7 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.partnership.bjbdocumenttrackerreader.MainActivity
+import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentPdfViewBinding
 import com.partnership.bjbdocumenttrackerreader.ui.adapter.VideoTutorialAdapter
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,6 +28,7 @@ class ManualBookFragment : Fragment() {
     ): View {
         _binding = FragmentPdfViewBinding.inflate(inflater, container, false)
         manualViewModel.getListTutorial()
+        setupToolbar()
         return binding.root
     }
 
@@ -34,6 +40,19 @@ class ManualBookFragment : Fragment() {
             adapter.submitList(it)
         }
         binding.rvTutorial.adapter = adapter
+    }
+
+    private fun setupToolbar() {
+        val activity = (activity as MainActivity)
+        activity.setSupportActionBar(binding.toolbarScan)
+        activity.setupActionBarWithNavController(findNavController())
+
+        binding.toolbarScan.setTitle("Video Tutorial")
+
+        binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
+        binding.toolbarScan.setNavigationOnClickListener {
+            findNavController().popBackStack()
+        }
     }
 }
 

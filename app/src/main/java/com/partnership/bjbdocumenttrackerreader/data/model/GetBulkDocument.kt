@@ -3,6 +3,7 @@ package com.partnership.bjbdocumenttrackerreader.data.model
 import com.partnership.bjbdocumenttrackerreader.data.local.entity.AssetEntity
 
 data class GetBulkDocument(
+    val scanCode: String,
     val documents: List<Document>
 )
 
@@ -11,7 +12,7 @@ data class Document(
     val noDoc: String? = "-",
     val rfid: String,
     val cif: String? = null,
-    val noRef: String,
+    val noRef: String? = null,
     val name: String,
     val segment: String? = null,
     val amountAgunan: Int? = null,
@@ -38,7 +39,8 @@ fun GetBulkDocument.toEntityList(): List<AssetEntity> {
             amountAgunan = document.amountAgunan,
             location = document.location,
             isThere = document.isThere,
-            noRef = document.noRef
+            noRef = document.noRef,
+            scanCode = scanCode
         )
     }
 }

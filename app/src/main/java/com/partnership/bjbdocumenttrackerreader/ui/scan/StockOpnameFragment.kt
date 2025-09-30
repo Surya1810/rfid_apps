@@ -1,9 +1,11 @@
 package com.partnership.bjbdocumenttrackerreader.ui.scan
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -38,7 +40,6 @@ class StockOpnameFragment : Fragment() {
 
     private val stockOpnameViewModel: StockOpnameViewModel by activityViewModels()
     private val dashboardViewModel: DashboardViewModel by activityViewModels()
-    private var isDocumentSelected: Boolean = true
     private var loadingDialog: AlertDialog? = null
     private var isDocument: Boolean = true
 
@@ -55,7 +56,7 @@ class StockOpnameFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentStockOpnameBinding.inflate(inflater, container, false)
-
+        showLoadingDialog()
         return binding.root
     }
 
@@ -64,15 +65,14 @@ class StockOpnameFragment : Fragment() {
         setupRecyclerView()
 
         dashboardViewModel.isDocumentSelected.observe(viewLifecycleOwner) {
-            isDocument = it
-            isDocumentSelected = it
+            setupToolbar(it)
             if (stockOpnameViewModel.listBulkDocument.value == null) {
                 lifecycleScope.launch {
                     stockOpnameViewModel.getBulkDocument(it)
                 }
             }
         }
-        setupToolbar()
+
         observeListDocument()
         binding.lyFound.setOnClickListener {
             stockOpnameViewModel.setIsThereFilter(true)
@@ -102,8 +102,18 @@ class StockOpnameFragment : Fragment() {
                     .setTitle("Konfirmasi Kirim")
                     .setMessage(message)
                     .setPositiveButton("Kirim") { dialog, _ ->
-                        Utils.showLoading(requireContext())
+                        stockOpnameViewModel.postStockOpnameChunked(isDocument = isDocument, chunkSize = 500)
                         lifecycleScope.launch {
+                            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED){
+                                stockOpnameViewModel.progress.collect {p ->
+                                    updateLoadingProgress(
+                                        current = p.current,
+                                        total = p.total
+                                    )
+                                }
+                            }
+                        }
+                        /*lifecycleScope.launch {
                             when (val result = stockOpnameViewModel.postStockOpname(isDocument)) {
                                 is ResultWrapper.Error -> {
                                     Utils.dismissLoading()
@@ -150,8 +160,9 @@ class StockOpnameFragment : Fragment() {
                                     findNavController().navigateUp()
                                 }
                             }
-                        }
+                        }*/
                         dialog.dismiss()
+                        showLoadingDialog("Kirim data stock opname...", false)
                     }
                     .setNegativeButton("Periksa Kembali") { dialog, _ ->
                         dialog.dismiss()
@@ -210,6 +221,23 @@ class StockOpnameFragment : Fragment() {
         }
 
         lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED){
+                stockOpnameViewModel.uploadResult.collect { result ->
+                    result ?: return@collect
+                    val msg = when (result) {
+                        is ResultWrapper.Success -> "Stock Opname Berhasil Dikirim"
+                        is ResultWrapper.ErrorResponse -> "Gagal (server): ${result.error}"
+                        is ResultWrapper.NetworkError -> "Gagal (jaringan): ${result.error}"
+                        is ResultWrapper.Error -> "Error: ${result.error}"
+                        ResultWrapper.Loading -> "Loading..."
+                    }
+                    dismissLoadingDialog()
+                    Toast.makeText(requireActivity(), msg, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        lifecycleScope.launch {
             stockOpnameViewModel.pagedAssets.collectLatest { pagingData ->
                 assetAdapter.submitData(pagingData)
             }
@@ -243,6 +271,7 @@ class StockOpnameFragment : Fragment() {
                 }
 
                 is ResultWrapper.Success -> {
+                    dismissLoadingDialog()
                     Toast.makeText(
                         requireActivity(),
                         "Sinkronisasi data berhasil",
@@ -257,19 +286,43 @@ class StockOpnameFragment : Fragment() {
         }
     }
 
-    private fun showLoadingDialog(message: String = "Sinkronisasi data") {
+    private fun showLoadingDialog(
+        message: String = "Sinkronisasi data",
+        indeterminate: Boolean = true,
+        max: Int = 100
+    ) {
         if (loadingDialog == null) {
             loadingDialog = MaterialAlertDialogBuilder(requireContext())
-                .setView(R.layout.dialog_loading) // layout custom dengan ProgressBar
+                .setView(R.layout.dialog_loading)
                 .setCancelable(false)
                 .create()
         }
         loadingDialog?.show()
         loadingDialog?.findViewById<TextView>(R.id.tvLoadingMessage)?.text = message
+        loadingDialog?.findViewById<ProgressBar>(R.id.progressCircular)?.apply {
+            isIndeterminate = indeterminate
+            this.max = max
+            progress = 0
+        }
+    }
+
+    private fun updateLoadingProgress(current: Int, total: Int) {
+        val percent = if (total == 0) 0 else ((current * 100f) / total).toInt()
+        loadingDialog?.findViewById<ProgressBar>(R.id.progressCircular)?.apply {
+            isIndeterminate = false
+            progress = percent
+        }
+        loadingDialog?.findViewById<TextView>(R.id.tvLoadingMessage)?.text =
+            "Mengirim data"
     }
 
     private fun dismissLoadingDialog() {
         loadingDialog?.dismiss()
+        loadingDialog = null
+    }
+
+    private fun updateLoadingMessage(message: String) {
+        loadingDialog?.findViewById<TextView>(R.id.tvLoadingMessage)?.text = message
     }
 
     private fun setupRecyclerView() {
@@ -282,7 +335,7 @@ class StockOpnameFragment : Fragment() {
         }
     }
 
-    private fun setupToolbar() {
+    private fun setupToolbar(isDocument: Boolean = true) {
         val activity = (activity as MainActivity)
         activity.setSupportActionBar(binding.toolbarScan)
         activity.setupActionBarWithNavController(findNavController())
