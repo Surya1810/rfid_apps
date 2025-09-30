@@ -66,6 +66,7 @@ class StockOpnameFragment : Fragment() {
 
         dashboardViewModel.isDocumentSelected.observe(viewLifecycleOwner) {
             setupToolbar(it)
+            isDocument = it
             if (stockOpnameViewModel.listBulkDocument.value == null) {
                 lifecycleScope.launch {
                     stockOpnameViewModel.getBulkDocument(it)
@@ -232,6 +233,7 @@ class StockOpnameFragment : Fragment() {
                         ResultWrapper.Loading -> "Loading..."
                     }
                     dismissLoadingDialog()
+                    findNavController().popBackStack()
                     Toast.makeText(requireActivity(), msg, Toast.LENGTH_SHORT).show()
                 }
             }

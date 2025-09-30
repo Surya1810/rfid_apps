@@ -31,6 +31,4 @@ object DatabaseModule {
     fun provideAssetDao(database: AppDatabase): AssetDao {
         return database.assetDao()
     }
-
-
 }
