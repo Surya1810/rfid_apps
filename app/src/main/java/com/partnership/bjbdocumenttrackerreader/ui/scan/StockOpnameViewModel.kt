@@ -167,7 +167,7 @@ class StockOpnameViewModel @Inject constructor(
     val listBulkDocument: LiveData<ResultWrapper<BaseResponse<GetBulkDocument>>?> get() = _getBulkDocument
 
     suspend fun getBulkDocument(isDocument: Boolean) {
-
+        _getBulkDocument.value = ResultWrapper.Loading
         if (isDocument) {
             _getBulkDocument.value = repository.getBulkDocument()
         } else {
@@ -230,6 +230,10 @@ class StockOpnameViewModel @Inject constructor(
             _uploadResult.value = result
             _isUploading.value = false
         }
+    }
+
+    fun clearResultStockOpname(){
+        _uploadResult.value = null
     }
 
     private val _scannedTags = MutableStateFlow<List<TagInfo>>(emptyList())

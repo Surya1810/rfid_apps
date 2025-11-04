@@ -56,7 +56,6 @@ class StockOpnameFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentStockOpnameBinding.inflate(inflater, container, false)
-        showLoadingDialog()
         return binding.root
     }
 
@@ -233,6 +232,9 @@ class StockOpnameFragment : Fragment() {
                         ResultWrapper.Loading -> "Loading..."
                     }
                     dismissLoadingDialog()
+                    stockOpnameViewModel.clearScannedTags()
+                    stockOpnameViewModel.clearBulkDocument()
+                    stockOpnameViewModel.clearResultStockOpname()
                     findNavController().popBackStack()
                     Toast.makeText(requireActivity(), msg, Toast.LENGTH_SHORT).show()
                 }

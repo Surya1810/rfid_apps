@@ -58,6 +58,9 @@
         <action
             android:id="@+id/action_searchingDocumentFragment_to_locatingFragment"
             app:destination="@id/locatingFragment" />
+        <action
+            android:id="@+id/action_searchingDocumentFragment_to_radarFragment"
+            app:destination="@id/radarFragment" />
     </fragment>
     <fragment
         android:id="@+id/searchDocumentFragment"
@@ -90,4 +93,9 @@
         android:name="com.partnership.bjbdocumenttrackerreader.ui.book.ManualBookFragment"
         android:label="fragment_pdf_view"
         tools:layout="@layout/fragment_pdf_view" />
+    <fragment
+        android:id="@+id/radarFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.search.radar.RadarFragment"
+        android:label="Radar"
+        tools:layout="@layout/fragment_radar" />
 </navigation>

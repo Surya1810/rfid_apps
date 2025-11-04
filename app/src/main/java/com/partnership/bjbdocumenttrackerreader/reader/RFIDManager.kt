@@ -10,6 +10,7 @@ import com.rscja.deviceapi.RFIDWithUHFUART
 import com.rscja.deviceapi.entity.UHFTAGInfo
 import com.rscja.deviceapi.interfaces.ConnectionStatus
 import com.rscja.deviceapi.interfaces.IUHF
+import com.rscja.deviceapi.interfaces.IUHFRadarLocationCallback
 
 class RFIDManager {
     private var rfid: RFIDWithUHFUART? = null
@@ -95,6 +96,26 @@ class RFIDManager {
             Log.e("set Frequency", errorMessage)
             onResult(false, errorMessage)
         }
+    }
+
+    fun startRadar(
+        context: Context,
+        targetTag: String,
+        callback: IUHFRadarLocationCallback
+    ): Boolean {
+        rfid = RFIDWithUHFUART.getInstance() ?: return false
+        return rfid!!.startRadarLocation(
+            context,
+            targetTag,
+            IUHF.Bank_EPC,
+            32,
+            callback
+        )
+    }
+
+    fun stopRadar(): Boolean {
+        rfid = RFIDWithUHFUART.getInstance() ?: return false
+        return rfid!!.stopRadarLocation()
     }
 
     fun getCurrentFrequencyName(context: Context): String {
