@@ -86,12 +86,12 @@ class RadarPanelView @JvmOverloads constructor(
             this.targetEpc = targetEpc
             this.showAllTag = showAllTag
         }
-        postInvalidateOnAnimation()
+        invalidate()
     }
 
     fun clearPanel() {
         synchronized(pointsLock) { pointsSnapshot = emptyList() }
-        postInvalidateOnAnimation()
+        invalidate()
     }
 }
 

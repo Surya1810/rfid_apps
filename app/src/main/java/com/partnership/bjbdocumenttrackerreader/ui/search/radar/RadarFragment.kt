@@ -77,6 +77,7 @@ class RadarFragment : Fragment() {
         binding.btnScanSearching.setOnClickListener {
             if(radarViewModel.isScanning.value == true){
                 radarViewModel.stopRadar()
+                binding.swShowAllTag.isEnabled = true
                 binding.btnScanSearching.text = "Mulai"
                 binding.btnScanSearching.setBackgroundColor(resources.getColor(R.color.md_theme_primary))
                 binding.radarView.clearPanel()
@@ -85,6 +86,7 @@ class RadarFragment : Fragment() {
                 binding.radarView.clearPanel()
                 radarViewModel.startRadar(if (showAllTag) "" else epcToSearch)
                 binding.radarView.startRadar()
+                binding.swShowAllTag.isEnabled = false
                 binding.btnScanSearching.text = "Berhenti"
                 binding.btnScanSearching.setBackgroundColor(resources.getColor(R.color.md_theme_error))
             }
