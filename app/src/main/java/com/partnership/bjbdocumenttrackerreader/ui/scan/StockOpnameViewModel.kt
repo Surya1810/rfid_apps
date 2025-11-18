@@ -23,6 +23,7 @@ import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepositoryImpl
 import com.partnership.bjbdocumenttrackerreader.util.RFIDUtils
 import com.partnership.bjbdocumenttrackerreader.util.SingleLiveEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -34,6 +35,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -159,7 +162,7 @@ class StockOpnameViewModel @Inject constructor(
         }
     }
 
-    fun clearSearch(){
+    fun clearSearch() {
         _getSearch.value = null
     }
 
@@ -175,15 +178,9 @@ class StockOpnameViewModel @Inject constructor(
         }
     }
 
-    fun clearBulkDocument(){
+    fun clearBulkDocument() {
         _getBulkDocument.value = null
     }
-
-    /*suspend fun postStockOpname(isDocument: Boolean): ResultWrapper<BaseResponse<Unit>> {
-        val type = if (isDocument) "document" else "agunan"
-        val dataBulk = repository.getStockOpnameItems()
-        return repository.postStockOpname(type, PostStockOpname(dataBulk))
-    }*/
 
     data class UploadProgress(val current: Int, val total: Int) {
         val percent: Int get() = if (total == 0) 0 else ((current * 100f) / total).toInt()
@@ -232,48 +229,108 @@ class StockOpnameViewModel @Inject constructor(
         }
     }
 
-    fun clearResultStockOpname(){
+    fun clearResultStockOpname() {
         _uploadResult.value = null
     }
 
     private val _scannedTags = MutableStateFlow<List<TagInfo>>(emptyList())
     val scannedTags: StateFlow<List<TagInfo>> get() = _scannedTags
 
+    @Volatile private var validHexSnapshot:Set<String> = emptySet()
+
+
+    @Volatile private var isReading = false
+
+    @OptIn(ExperimentalStdlibApi::class)
     fun startScan() {
-        Handler(Looper.getMainLooper()).post {
-            reader.readTagAuto { newTag ->
-                val tagInfo = TagInfo(
-                    epc = newTag.epc,
-                    rssi = newTag.rssi
-                )
-                insertTagOrdered(tagInfo)
+        if (isReading) return
+        isReading = true
+        startTimer()
+
+        //method AMS
+        isReading = true
+        recentlyScanned.clear()
+        reader.readTagAuto { uhfTagInfo ->
+            if (!isReading) return@readTagAuto
+
+            CoroutineScope(Dispatchers.Main).launch {
+                val scannedBytes = uhfTagInfo.epcBytes
+                val scannedHex = scannedBytes.toHexString().lowercase()
+
+                val matched = cacheLock.withLock {
+                    cacheValidEpcs.any { valid -> scannedBytes.contentEquals(valid) }
+                }
+
+                if (matched && !isRecentlyScanned(scannedHex)) {
+                    markScanned(scannedHex)
+                    withContext(Dispatchers.IO) {
+                        updateIsThere(scannedHex)
+                    }
+                }
             }
         }
     }
 
+    fun setSoundBeepToFalse(){
+        _soundBeep.postValue(false)
+    }
 
+    private val cacheValidEpcs = mutableSetOf<ByteArray>()
+    private val cacheValidEpcStrings = mutableSetOf<String>()
+    private val cacheLock = Mutex()
+    private val recentlyScanned = mutableSetOf<String>()
 
-    private fun insertTagOrdered(newTag: TagInfo) {
-        val currentList = _scannedTags.value.toMutableList()
-        val exists = booleanArrayOf(false)
+    @OptIn(ExperimentalStdlibApi::class)
+    fun cacheAllValidEpcs() {
+        viewModelScope.launch {
+            val allEpc = repository.getValidEpc()
+            cacheLock.withLock {
+                cacheValidEpcs.clear()
+                cacheValidEpcStrings.clear()
 
-        val index = RFIDUtils.getInsertIndex(currentList, newTag, exists)
+                allEpc.forEach { epc ->
+                    val normalized = epc.lowercase().padStart(8, '0')
+                    cacheValidEpcStrings.add(normalized)
 
-        if (!exists[0]) {
-            _soundBeep.postValue(true)
-            currentList.add(index, newTag)
-            _scannedTags.value = currentList
-        }else{
-            _soundBeep.postValue(false)
+                    try {
+                        if (normalized.length % 2 == 0) {
+                            cacheValidEpcs.add(normalized.hexToByteArray())
+                        }
+                    } catch (e: Exception) {
+                        Log.e("EPC_PARSE", "Invalid hex: $normalized", e)
+                    }
+                }
+            }
         }
     }
+
+    private fun isRecentlyScanned(hex: String): Boolean {
+        return recentlyScanned.contains(hex)
+    }
+
+
+    private fun markScanned(hex: String) {
+        recentlyScanned.add(hex)
+    }
+
+    private fun updateIsThere(hex: String) {
+        if (!repository.isAssetThere(hex)) {
+            repository.updateIsThere(hex, true)
+            _soundBeep.postValue(true)
+        }
+    }
+
 
     fun clearScannedTags() {
         _scannedTags.value = emptyList()
     }
-    fun stopScan(){
-        if (reader.isInventorying() == true){
+
+    fun stopScan() {
+        if (reader.isInventorying() == true) {
             reader.stopReadTag()
+            stopTimer()
+            isReading = false
+            setSoundBeepToFalse()
         }
     }
 
@@ -295,9 +352,9 @@ class StockOpnameViewModel @Inject constructor(
     }
 
     private val _setDataToSearchingDocument = MutableLiveData<Document>()
-    val searchDocumentEpc : LiveData<Document> get() = _setDataToSearchingDocument
+    val searchDocumentEpc: LiveData<Document> get() = _setDataToSearchingDocument
 
-    fun setDataToSearchingDocument(document: Document){
+    fun setDataToSearchingDocument(document: Document) {
         _setDataToSearchingDocument.value = document
     }
 }

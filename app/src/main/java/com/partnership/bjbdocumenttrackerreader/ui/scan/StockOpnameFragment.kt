@@ -1,7 +1,6 @@
 package com.partnership.bjbdocumenttrackerreader.ui.scan
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,9 +9,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -23,10 +22,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.partnership.bjbdocumenttrackerreader.MainActivity
 import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
-import com.partnership.bjbdocumenttrackerreader.data.model.TagInfo
 import com.partnership.bjbdocumenttrackerreader.databinding.FragmentStockOpnameBinding
 import com.partnership.bjbdocumenttrackerreader.reader.BeepSoundManager
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
+import com.partnership.bjbdocumenttrackerreader.reader.ReaderKeyEventHandler
 import com.partnership.bjbdocumenttrackerreader.ui.adapter.SoDocumentAdapter
 import com.partnership.bjbdocumenttrackerreader.ui.home.DashboardViewModel
 import com.partnership.bjbdocumenttrackerreader.util.Utils
@@ -36,7 +35,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class StockOpnameFragment : Fragment() {
+class StockOpnameFragment : Fragment(), ReaderKeyEventHandler {
 
     private val stockOpnameViewModel: StockOpnameViewModel by activityViewModels()
     private val dashboardViewModel: DashboardViewModel by activityViewModels()
@@ -50,6 +49,8 @@ class StockOpnameFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var assetAdapter: SoDocumentAdapter
 
+    @Inject
+    lateinit var soundManager: BeepSoundManager
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -72,6 +73,11 @@ class StockOpnameFragment : Fragment() {
                 }
             }
         }
+        stockOpnameViewModel.soundBeep.observe(viewLifecycleOwner) {
+            if (it) {
+                soundManager.playBeep()
+            }
+        }
 
         observeListDocument()
         binding.lyFound.setOnClickListener {
@@ -87,7 +93,7 @@ class StockOpnameFragment : Fragment() {
         }
 
         binding.btScan.setOnClickListener {
-            findNavController().navigate(R.id.action_stockOpnameFragment_to_scanFragment)
+            toggleScan()
         }
 
         binding.btSend.setOnClickListener {
@@ -275,6 +281,7 @@ class StockOpnameFragment : Fragment() {
                 }
 
                 is ResultWrapper.Success -> {
+                    stockOpnameViewModel.cacheAllValidEpcs()
                     dismissLoadingDialog()
                     Toast.makeText(
                         requireActivity(),
@@ -361,7 +368,6 @@ class StockOpnameFragment : Fragment() {
                     dialog.dismiss()
                 }
                 .show()
-
         }
     }
 
@@ -370,5 +376,31 @@ class StockOpnameFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+    private fun toggleScan(){
+        val isScanning = reader.isInventorying() == true
 
+
+        if (!isScanning) {
+            // Mulai scan
+            stockOpnameViewModel.startScan()
+            binding.btScan.apply {
+                text = "STOP"
+                setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark))
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+            }
+        } else {
+            // Hentikan scan
+            stockOpnameViewModel.stopScan()
+            binding.btScan.apply {
+                text = "SCAN"
+                setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.md_theme_yellow))
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.md_theme_primary))
+            }
+        }
+    }
+
+    override fun myOnKeyDown() = toggleScan()
+
+    override fun myOnKeyUp() {
+    }
 }

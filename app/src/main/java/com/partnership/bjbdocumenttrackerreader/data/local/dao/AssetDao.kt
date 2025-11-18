@@ -55,6 +55,9 @@ interface AssetDao {
     @Query("SELECT id, isThere FROM assets")
     suspend fun getStockOpnameItems(): List<AssetStatus>
 
+    @Query("SELECT rfid FROM assets")
+    suspend fun getValidEpc(): List<String>
+
     @Query("SELECT isThere FROM assets WHERE LOWER(rfid) = :epc LIMIT 1")
     fun isAssetThere(epc: String): Boolean
 }

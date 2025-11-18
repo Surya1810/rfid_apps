@@ -132,9 +132,9 @@ class SearchingDocumentFragment : Fragment() {
         binding.btLocating.setOnClickListener {
             findNavController().navigate(R.id.action_searchingDocumentFragment_to_locatingFragment)
         }
-        binding.btSearchRadar.setOnClickListener {
+        /*binding.btSearchRadar.setOnClickListener {
             findNavController().navigate(R.id.action_searchingDocumentFragment_to_radarFragment)
-        }
+        }*/
         binding.btSend.setOnClickListener {
             Utils.showLoading(requireContext())
             // kirim data

@@ -305,4 +305,7 @@ class RFIDRepositoryImpl @Inject constructor(
         return  assetDao.isAssetThere(epc)
     }
 
+    suspend fun getValidEpc(): List<String> {
+        return assetDao.getValidEpc()
+    }
 }
