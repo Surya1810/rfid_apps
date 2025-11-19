@@ -17,7 +17,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    val BASE_URL = "http://192.168.18.24:5000/"
+    val BASE_URL = "http://192.168.0.101:5000/"
     @Provides
     @Singleton
     fun provideGson(): Gson {
@@ -31,9 +31,9 @@ object NetworkModule {
 
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)   // waktu maksimum untuk membuat koneksi
-            .readTimeout(30, TimeUnit.SECONDS)      // waktu maksimum untuk membaca response
-            .writeTimeout(30, TimeUnit.SECONDS)     // waktu maksimum untuk menulis Data ke server
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .build()
     }
 

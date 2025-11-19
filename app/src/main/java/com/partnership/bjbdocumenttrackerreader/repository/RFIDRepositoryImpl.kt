@@ -10,6 +10,7 @@ import com.partnership.bjbdocumenttrackerreader.data.model.AssetStatus
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import com.partnership.bjbdocumenttrackerreader.data.model.GetBulkDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
+import com.partnership.bjbdocumenttrackerreader.data.model.GetListSegments
 import com.partnership.bjbdocumenttrackerreader.data.model.GetListTutorialVideo
 import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.PostStockOpname
@@ -150,11 +151,12 @@ class RFIDRepositoryImpl @Inject constructor(
 
     override suspend fun searchAsset(
         type: String,
-        search: String?
+        search: String?,
+        segment: String?
     ): ResultWrapper<BaseResponse<GetBulkDocument>> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getSearch(search,type)
+                val response = apiService.getSearch(search,type,segment)
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null) {
@@ -207,6 +209,27 @@ class RFIDRepositoryImpl @Inject constructor(
                         ResultWrapper.Error("Response body is null")
                     }
                 } else {
+                    ResultWrapper.Error("Error: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                ResultWrapper.Error(e.message ?: "Unknown Error")
+            }
+        }
+    }
+
+    override suspend fun getListSegment(): ResultWrapper<BaseResponse<List<GetListSegments>>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getSegments()
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null) {
+                        ResultWrapper.Success(body)
+                    } else {
+                        ResultWrapper.Error("Response body is null")
+                    }
+                }
+                else {
                     ResultWrapper.Error("Error: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {

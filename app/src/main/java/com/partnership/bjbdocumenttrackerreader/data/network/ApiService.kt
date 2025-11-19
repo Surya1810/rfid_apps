@@ -3,6 +3,7 @@ package com.partnership.bjbdocumenttrackerreader.data.network
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import com.partnership.bjbdocumenttrackerreader.data.model.GetBulkDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
+import com.partnership.bjbdocumenttrackerreader.data.model.GetListSegments
 import com.partnership.bjbdocumenttrackerreader.data.model.GetListTutorialVideo
 import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.PostStockOpname
@@ -22,7 +23,9 @@ interface ApiService {
     suspend fun getListLostDocument(@Query("page") page: Int):Response<BaseResponse<List<String>>>
 
     @GET("api/stock-opname/document")
-    suspend fun getBulkDocument(): Response<BaseResponse<GetBulkDocument>>
+    suspend fun getBulkDocument(
+
+    ): Response<BaseResponse<GetBulkDocument>>
 
     @GET("api/stock-opname/agunan")
     suspend fun getBulkAgunan(): Response<BaseResponse<GetBulkDocument>>
@@ -33,10 +36,14 @@ interface ApiService {
         @Body stockOpname: PostStockOpname
     ): Response<BaseResponse<Unit>>
 
+    @GET("api/segments")
+    suspend fun getSegments(): Response<BaseResponse<List<GetListSegments>>>
+
     @GET("api/search")
     suspend fun getSearch(
         @Query("search") search: String? = null,
-        @Query("type") type: String
+        @Query("type") type: String,
+        @Query("segment") segment: String? = null
     ): Response<BaseResponse<GetBulkDocument>>
 
     @POST("api/search")

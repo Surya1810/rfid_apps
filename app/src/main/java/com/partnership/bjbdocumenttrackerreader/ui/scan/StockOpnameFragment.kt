@@ -96,6 +96,18 @@ class StockOpnameFragment : Fragment(), ReaderKeyEventHandler {
             toggleScan()
         }
 
+        stockOpnameViewModel.isScanning.observe(viewLifecycleOwner){
+            if(it){
+                binding.lyTimer.visibility = View.VISIBLE
+                stockOpnameViewModel.elapsedTime.observe(viewLifecycleOwner){timer ->
+                    binding.tvTimer.text = timer
+                }
+            }else{
+                binding.lyTimer.visibility = View.GONE
+            }
+        }
+
+
         binding.btSend.setOnClickListener {
             if (reader.isInventorying() == true) {
                 Toast.makeText(
@@ -119,54 +131,6 @@ class StockOpnameFragment : Fragment(), ReaderKeyEventHandler {
                                 }
                             }
                         }
-                        /*lifecycleScope.launch {
-                            when (val result = stockOpnameViewModel.postStockOpname(isDocument)) {
-                                is ResultWrapper.Error -> {
-                                    Utils.dismissLoading()
-                                    Toast.makeText(
-                                        requireActivity(),
-                                        result.error,
-                                        Toast.LENGTH_SHORT
-                                    )
-                                        .show()
-                                }
-
-                                is ResultWrapper.ErrorResponse -> {
-                                    Utils.dismissLoading()
-                                    Toast.makeText(
-                                        requireActivity(),
-                                        result.error,
-                                        Toast.LENGTH_SHORT
-                                    )
-                                        .show()
-                                }
-
-                                ResultWrapper.Loading -> {
-
-                                }
-
-                                is ResultWrapper.NetworkError -> {
-                                    Utils.dismissLoading()
-                                    Toast.makeText(
-                                        requireActivity(),
-                                        "Terjadi kesalahan pada jaringan, Harap periksa jaringan",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-
-                                is ResultWrapper.Success -> {
-                                    Utils.dismissLoading()
-                                    stockOpnameViewModel.clearScannedTags()
-                                    stockOpnameViewModel.clearBulkDocument()
-                                    Toast.makeText(
-                                        requireActivity(),
-                                        "Stock Opname Berhasil",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    findNavController().navigateUp()
-                                }
-                            }
-                        }*/
                         dialog.dismiss()
                         showLoadingDialog("Kirim data stock opname...", false)
                     }
@@ -330,10 +294,6 @@ class StockOpnameFragment : Fragment(), ReaderKeyEventHandler {
     private fun dismissLoadingDialog() {
         loadingDialog?.dismiss()
         loadingDialog = null
-    }
-
-    private fun updateLoadingMessage(message: String) {
-        loadingDialog?.findViewById<TextView>(R.id.tvLoadingMessage)?.text = message
     }
 
     private fun setupRecyclerView() {

@@ -87,7 +87,39 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:padding="8dp">
+                        <LinearLayout
+                            android:id="@+id/lyTimer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:visibility="gone"
+                            android:gravity="center"
+                            android:orientation="vertical">
 
+                            <ImageView
+                                android:textColor="@color/black"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:background="@drawable/bg_circle"
+                                android:padding="4dp"
+                                android:src="@drawable/timer_24px"
+                                app:tint="@color/md_theme_primary" />
+
+                            <TextView
+                                android:textColor="@color/black"
+                                android:id="@+id/tvTimer"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="00:00"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:textColor="@color/black"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Total"
+                                android:textSize="12sp" />
+                        </LinearLayout>
                         <LinearLayout
                             android:id="@+id/lyTotal"
                             android:layout_width="wrap_content"

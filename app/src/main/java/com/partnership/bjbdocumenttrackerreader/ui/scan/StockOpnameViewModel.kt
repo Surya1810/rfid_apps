@@ -16,6 +16,7 @@ import com.partnership.bjbdocumenttrackerreader.data.local.entity.AssetEntity
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import com.partnership.bjbdocumenttrackerreader.data.model.Document
 import com.partnership.bjbdocumenttrackerreader.data.model.GetBulkDocument
+import com.partnership.bjbdocumenttrackerreader.data.model.GetListSegments
 import com.partnership.bjbdocumenttrackerreader.data.model.PostStockOpname
 import com.partnership.bjbdocumenttrackerreader.data.model.TagInfo
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
@@ -152,20 +153,65 @@ class StockOpnameViewModel @Inject constructor(
     private val _getSearch = MutableLiveData<ResultWrapper<BaseResponse<GetBulkDocument>>?>()
     val listSearch: LiveData<ResultWrapper<BaseResponse<GetBulkDocument>>?> get() = _getSearch
 
+    // simpan state filter & query
+    private val _listSegment = MutableLiveData<List<GetListSegments>>()
+    val listSegment: LiveData<List<GetListSegments>> get() = _listSegment
+
+    // null = "Semua"
+    private val _selectedSegment = MutableLiveData<String?>(null)
+    val selectedSegment: LiveData<String?> get() = _selectedSegment
+
+    // state internal untuk search
+    private var lastIsDocument: Boolean = true
+    private var lastQuery: String? = null
+
+    // --- API search utama, dipanggil dari fragment ---
     fun getSearchDocument(isDocument: Boolean, query: String? = null) {
+        lastIsDocument = isDocument
+        lastQuery = query
+        searchWithCurrentFilter()
+    }
+
+    // fungsi helper: selalu pakai kombinasi terakhir isDocument + query + segment
+    private fun searchWithCurrentFilter() {
         viewModelScope.launch {
-            val type = if (isDocument) "document" else "agunan"
+            val type = if (lastIsDocument) "document" else "agunan"
+            val segment = _selectedSegment.value
+            val query = lastQuery
+
+            _getSearch.value = ResultWrapper.Loading
+
             _getSearch.value = repository.searchAsset(
                 type = type,
-                search = query
+                search = query,
+                segment = segment
             )
         }
     }
 
-    fun clearSearch() {
-        _getSearch.value = null
+    // --- Segment filter ---
+
+    suspend fun getListFilterSegment(): ResultWrapper<BaseResponse<List<GetListSegments>>> {
+        return repository.getListSegment()
     }
 
+    fun setListSegment(list: List<GetListSegments>) {
+        _listSegment.value = list
+    }
+
+    // dipanggil ketika user pilih filter di bottom sheet
+    fun setSelectedSegment(segment: String?) {
+        _selectedSegment.value = segment
+        // setiap ganti filter -> ulang search dengan query terakhir
+        searchWithCurrentFilter()
+    }
+
+    fun clearSearch() {
+        _getSearch.value = null
+        lastQuery = null
+        // kalau mau, bisa reset filter juga:
+        // _selectedSegment.value = null
+    }
     private val _getBulkDocument = SingleLiveEvent<ResultWrapper<BaseResponse<GetBulkDocument>>?>()
     val listBulkDocument: LiveData<ResultWrapper<BaseResponse<GetBulkDocument>>?> get() = _getBulkDocument
 
@@ -236,18 +282,17 @@ class StockOpnameViewModel @Inject constructor(
     private val _scannedTags = MutableStateFlow<List<TagInfo>>(emptyList())
     val scannedTags: StateFlow<List<TagInfo>> get() = _scannedTags
 
-    @Volatile private var validHexSnapshot:Set<String> = emptySet()
-
-
     @Volatile private var isReading = false
+    private var _isScanning: MutableLiveData<Boolean> = MutableLiveData(false)
+    val isScanning: LiveData<Boolean> get() = _isScanning
 
     @OptIn(ExperimentalStdlibApi::class)
     fun startScan() {
         if (isReading) return
         isReading = true
+        _isScanning.value = true
         startTimer()
 
-        //method AMS
         isReading = true
         recentlyScanned.clear()
         reader.readTagAuto { uhfTagInfo ->
@@ -329,6 +374,7 @@ class StockOpnameViewModel @Inject constructor(
         if (reader.isInventorying() == true) {
             reader.stopReadTag()
             stopTimer()
+            _isScanning.value = false
             isReading = false
             setSoundBeepToFalse()
         }

@@ -7,4 +7,9 @@
         android:icon="@drawable/search_24px"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="ifRoom|collapseActionView" />
+    <item
+        android:id="@+id/action_filter"
+        android:title="Filter Segmen"
+        android:icon="@drawable/sort_24px"
+        app:showAsAction="always"/>
 </menu>
