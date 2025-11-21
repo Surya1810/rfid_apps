@@ -26,7 +26,6 @@ class RadarViewModel @Inject constructor(private val reader: RFIDManager,@Applic
     private val _beep = MutableLiveData<Boolean>()
     val beep: LiveData<Boolean> get() = _beep
 
-
     fun startRadar(target: String) {
         _isScanning.value = true
 
@@ -58,6 +57,8 @@ class RadarViewModel @Inject constructor(private val reader: RFIDManager,@Applic
             }
         })
     }
+
+
 
     fun stopRadar(){
         _isScanning.value = false

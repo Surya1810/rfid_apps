@@ -59,7 +59,8 @@ class HomeFragment : Fragment() {
 
 
         binding.btSearchDocument.setOnClickListener {
-            showDialogSearch()
+            //showDialogSearch()
+            findNavController().navigate(R.id.action_homeFragment_to_radarFragment)
         }
 
         binding.btVideoManual.setOnClickListener {

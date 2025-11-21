@@ -32,6 +32,9 @@
         <action
             android:id="@+id/action_homeFragment_to_manualBookFragment"
             app:destination="@id/manualBookFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_radarFragment"
+            app:destination="@id/radarFragment" />
     </fragment>
     <fragment
         android:id="@+id/stockOpnameFragment"
