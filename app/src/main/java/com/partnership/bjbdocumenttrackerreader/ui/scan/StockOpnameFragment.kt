@@ -147,7 +147,6 @@ class StockOpnameFragment : Fragment(), ReaderKeyEventHandler {
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    // Cek kondisi, misal sedang scanning
                     if (reader.isInventorying() == true) {
                         Toast.makeText(
                             requireContext(),
@@ -315,19 +314,28 @@ class StockOpnameFragment : Fragment(), ReaderKeyEventHandler {
 
         binding.toolbarScan.setNavigationIcon(R.drawable.arrow_back_ios_24px)
         binding.toolbarScan.setNavigationOnClickListener {
-            // Tampilkan dialog konfirmasi
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Keluar Halaman?")
-                .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
-                .setPositiveButton("Ya") { _, _ ->
-                    stockOpnameViewModel.clearScannedTags()
-                    stockOpnameViewModel.clearBulkDocument()
-                    findNavController().navigateUp()
-                }
-                .setNegativeButton("Batal") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .show()
+            if (reader.isInventorying() == true) {
+                Toast.makeText(
+                    requireContext(),
+                    "Hentikan scan terlebih dahulu!",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                // Tampilkan dialog konfirmasi
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Keluar Halaman?")
+                    .setMessage("Stock Opname masih berjalan,jika anda keluar maka progress stock opname akan di hapus. apakah kamu yakin ingin keluar?")
+                    .setPositiveButton("Ya") { _, _ ->
+                        stockOpnameViewModel.clearScannedTags()
+                        stockOpnameViewModel.clearBulkDocument()
+                        findNavController().navigateUp()
+
+                    }
+                    .setNegativeButton("Batal") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .show()
+            }
         }
     }
 
