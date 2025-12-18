@@ -19,8 +19,8 @@ import javax.inject.Inject
 class BorrowingViewModel @Inject constructor(private val repository: RFIDRepositoryImpl) :
     ViewModel() {
 
-    private var _documentSelected = MutableLiveData<Document>()
-    val documentSelected: LiveData<Document> get() = _documentSelected
+    private var _documentSelected = MutableLiveData<Document?>()
+    val documentSelected: LiveData<Document?> get() = _documentSelected
 
     fun setDocument(document: Document) {
         _documentSelected.value = document
@@ -33,15 +33,15 @@ class BorrowingViewModel @Inject constructor(private val repository: RFIDReposit
         _isCreteBorrow.value = isCreate
     }
 
-    private var _signatureBorrowed = MutableLiveData<File>()
-    val signatureBorrowed: LiveData<File> get() = _signatureBorrowed
+    private var _signatureBorrowed = MutableLiveData<File?>()
+    val signatureBorrowed: LiveData<File?> get() = _signatureBorrowed
 
     fun setSignatureBorrowed(signature: File) {
         _signatureBorrowed.value = signature
     }
 
-    private var _signatureReturned = MutableLiveData<File>()
-    val signatureReturned: LiveData<File> get() = _signatureReturned
+    private var _signatureReturned = MutableLiveData<File?>()
+    val signatureReturned: LiveData<File?> get() = _signatureReturned
 
     fun setSignatureReturned(signature: File) {
         _signatureReturned.value = signature

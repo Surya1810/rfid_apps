@@ -305,16 +305,16 @@
                     android:text="Belum ada peminjaman pada dokumen ini"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/appBarLayout2" />
+                    app:layout_constraintStart_toStartOf="parent" />
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvHistoryBorrowed"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    app:layout_constraintTop_toBottomOf="@id/appBarLayout2"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
                     tools:listitem="@layout/item_history_borrowed" />
             </androidx.constraintlayout.widget.ConstraintLayout>
             <LinearLayout
@@ -452,16 +452,20 @@
                             android:id="@+id/textView19"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tanda Tangan Peminjaman" />
+                            android:text="Tanda Tangan Peminjaman"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
                         <ImageView
                             android:id="@+id/imgSignatureBorrowing"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:layout_height="0dp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="0.0"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/textView11" />
+                            app:layout_constraintTop_toBottomOf="@+id/textView11"
+                            app:layout_constraintVertical_bias="0.0" />
 
                         <TextView
                             android:id="@+id/textView11"
@@ -503,7 +507,11 @@
                             android:id="@+id/textView18"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tanda Tangan Pengembalian" />
+                            android:layout_marginStart="8dp"
+                            android:layout_marginTop="8dp"
+                            android:text="Tanda Tangan Pengembalian"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
                         <ImageView
                             android:id="@+id/imgSignatureReturning"
@@ -512,7 +520,7 @@
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/textView11" />
+                            app:layout_constraintTop_toBottomOf="@+id/textView12" />
 
                         <TextView
                             android:id="@+id/textView12"

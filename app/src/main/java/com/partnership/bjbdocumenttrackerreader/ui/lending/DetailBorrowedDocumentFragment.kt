@@ -54,20 +54,22 @@ class DetailBorrowedDocumentFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.documentSelected.observe(viewLifecycleOwner) {
-            setDetailDocument(it)
-            if(it.isBorrowed){
-                viewModel.getDetailBorrowed(it.id)
-                observeDetailBorrowDocument()
-                binding.lyBorrowed.visibility = View.VISIBLE
-                binding.lyNotBorrowed.visibility = View.GONE
-            }else{
-                viewModel.getHistoryBorrow(it.id)
-                binding.lyBorrowed.visibility = View.GONE
-                binding.lyNotBorrowed.visibility = View.VISIBLE
-                setupRecyclerView()
-                observeViewModel()
+            if(it != null){
+                setDetailDocument(it)
+                if(it.isBorrowed){
+                    viewModel.getDetailBorrowed(it.id)
+                    observeDetailBorrowDocument()
+                    binding.lyBorrowed.visibility = View.VISIBLE
+                    binding.lyNotBorrowed.visibility = View.GONE
+                }else{
+                    viewModel.getHistoryBorrow(it.id)
+                    binding.lyBorrowed.visibility = View.GONE
+                    binding.lyNotBorrowed.visibility = View.VISIBLE
+                    setupRecyclerView()
+                    observeViewModel()
+                }
+                selectedDocument = it
             }
-            selectedDocument = it
         }
 
 

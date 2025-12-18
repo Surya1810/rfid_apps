@@ -43,7 +43,9 @@ class HistoryBorrowedFragment : Fragment() {
         observeViewModel()
 
        viewModel.documentSelected.observe(viewLifecycleOwner){
-           viewModel.getHistoryBorrow(idDocument = it.id)
+           if (it != null){
+               viewModel.getHistoryBorrow(idDocument = it.id)
+           }
        }
     }
 
