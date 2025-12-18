@@ -2,41 +2,36 @@ package com.partnership.bjbdocumenttrackerreader.ui.home
 
 import android.content.ContentValues.TAG
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import androidx.compose.ui.window.Dialog
+import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.partnership.bjbdocumenttrackerreader.R
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
-import com.partnership.bjbdocumenttrackerreader.databinding.FragmentHomeBinding
-import com.partnership.bjbdocumenttrackerreader.ui.adapter.DocumentAdapter
+import com.partnership.bjbdocumenttrackerreader.databinding.FragmentDashboardBinding
 import dagger.hilt.android.AndroidEntryPoint
 import java.text.NumberFormat
 import java.util.Locale
-import androidx.core.net.toUri
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
-    private var _binding: FragmentHomeBinding? = null
+    private var _binding: FragmentDashboardBinding? = null
     private val binding get() = _binding!!
     private val viewModel: DashboardViewModel by activityViewModels()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -48,7 +43,7 @@ class HomeFragment : Fragment() {
             setRefreshing(true)
         }
 
-        binding.btScan.setOnClickListener {
+        binding.cardStock.setOnClickListener {
             showDialog()
         }
 
@@ -58,20 +53,20 @@ class HomeFragment : Fragment() {
         }
 
 
-        binding.btSearchDocument.setOnClickListener {
+        binding.cardSearch.setOnClickListener {
             showDialogSearch()
         }
 
-        binding.btVideoManual.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_manualBookFragment)
+        binding.cardHistorySo.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_historiesSoFragment)
         }
 
-        binding.btManualBook.setOnClickListener {
-            val url = "http://192.168.0.101:5000/template/manual_book.pdf"
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = url.toUri()
-            }
-            requireActivity().startActivity(intent)
+        binding.cardGuide.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_manualFragment)
+        }
+
+        binding.cardBorrow.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_borrowingFragment)
         }
 
         viewModel.dataDashboard.observe(viewLifecycleOwner) {
@@ -108,8 +103,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-
-    private fun formatToRupiah(value: Double): String {
+    fun formatToRupiah(value: Double): String {
         val format = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
         return format.format(value).replace(",00", "").replace("Rp", "Rp")
     }
@@ -165,14 +159,17 @@ class HomeFragment : Fragment() {
     }
 
     private fun setData(dashboardData: GetDashboard){
-        binding.tvLts.text = dashboardData.overview.lastTimeScan
-        binding.tvTotalData.text = dashboardData.overview.totalData.toString()
-        binding.tvTotalNilai.text = formatToRupiah(dashboardData.overview.totalvalue)
-        binding.tvTotalDocument.text = dashboardData.totalDocuments.toString()
-        binding.tvTotalAgunan.text = dashboardData.totalAgunan.toString()
-        binding.tvLost.text = dashboardData.dashboard.totalDocumentsLost.toString()
-        binding.tvValueLost.text = formatToRupiah(dashboardData.dashboard.valueLostDocument)
-        binding.tvFound.text = dashboardData.dashboard.totalDocumentsFound.toString()
+        binding.tvLastUpdate.text = "Data diperbaharui pada ${dashboardData.overview.lastTimeScan}"
+        binding.tvTotalDocument.text = dashboardData.overview.totalData.toString()
+        binding.tvTotalNilai.text = formatToRupiah(dashboardData.overview.totalValue)
+        binding.tvTotalDocument.text = dashboardData.overview.totalData.toString()
+        binding.tvDocumentCount.text = dashboardData.totalDocuments.toString()
+        binding.tvAgunanCount.text = dashboardData.totalAgunan.toString()
+        binding.tvBorrowCount.text = dashboardData.totalBorrowedDocuments.toString()
+        binding.tvLastScanStatDocument.text = "${dashboardData.lastStockOpname.document.totalFound}/${dashboardData.lastStockOpname.document.totalItems} Scanned"
+        binding.tvLastScanStatAgunan.text = "${dashboardData.lastStockOpname.agunan.totalFound}/${dashboardData.lastStockOpname.agunan.totalItems} Scanned"
+        binding.tvSoDateContract.text = dashboardData.lastStockOpname.document.lastTimeScan ?: "Tidak diketahui"
+        binding.tvSoDateAgunan.text = dashboardData.lastStockOpname.agunan.lastTimeScan ?: "Tidak diketahui"
     }
 
     private fun setRefreshing(isRefreshing: Boolean) {

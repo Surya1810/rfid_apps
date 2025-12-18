@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+ <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
@@ -19,22 +19,22 @@
         android:id="@+id/homeFragment"
         android:name="com.partnership.bjbdocumenttrackerreader.ui.home.HomeFragment"
         android:label=""
-        tools:layout="@layout/fragment_home" >
+        tools:layout="@layout/fragment_dashboard" >
         <action
             android:id="@+id/action_homeFragment_to_searchDocumentFragment"
             app:destination="@id/searchDocumentFragment" />
         <action
-            android:id="@+id/action_homeFragment_to_listLostFragment"
-            app:destination="@id/listLostFragment" />
-        <action
             android:id="@+id/action_homeFragment_to_stockOpnameFragment"
             app:destination="@id/stockOpnameFragment" />
         <action
-            android:id="@+id/action_homeFragment_to_manualBookFragment"
-            app:destination="@id/manualBookFragment" />
+            android:id="@+id/action_homeFragment_to_manualFragment"
+            app:destination="@id/manualFragment" />
         <action
-            android:id="@+id/action_homeFragment_to_radarFragment"
-            app:destination="@id/radarFragment" />
+            android:id="@+id/action_homeFragment_to_borrowingFragment"
+            app:destination="@id/borrowingFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_historiesSoFragment"
+            app:destination="@id/historiesSoFragment" />
     </fragment>
     <fragment
         android:id="@+id/stockOpnameFragment"
@@ -77,11 +77,6 @@
             app:destination="@id/settingReaderFragment" />
     </fragment>
     <fragment
-        android:id="@+id/listLostFragment"
-        android:name="com.partnership.bjbdocumenttrackerreader.ui.home.ListLostFragment"
-        android:label="fragment_list_lost"
-        tools:layout="@layout/fragment_list_lost" />
-    <fragment
         android:id="@+id/locatingFragment"
         android:name="com.partnership.bjbdocumenttrackerreader.ui.search.LocatingFragment"
         android:label="Cari Lokasi"
@@ -101,4 +96,64 @@
         android:name="com.partnership.bjbdocumenttrackerreader.ui.search.radar.RadarFragment"
         android:label="Radar"
         tools:layout="@layout/fragment_radar" />
+    <fragment
+        android:id="@+id/manualFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.book.ManualFragment"
+        android:label="fragment_manual"
+        tools:layout="@layout/fragment_manual" >
+        <action
+            android:id="@+id/action_manualFragment_to_manualBookFragment"
+            app:destination="@id/manualBookFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/borrowingFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.lending.BorrowingFragment"
+        android:label="fragment_borrowing"
+        tools:layout="@layout/fragment_borrowing" >
+        <action
+            android:id="@+id/action_borrowingFragment_to_borrowingFormFragment"
+            app:destination="@id/borrowingFormFragment" />
+        <action
+            android:id="@+id/action_borrowingFragment_to_detailBorrowedDocumentFragment"
+            app:destination="@id/detailBorrowedDocumentFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/borrowingFormFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.lending.BorrowingFormFragment"
+        android:label=""
+        tools:layout="@layout/fragment_borrowing_form" >
+        <action
+            android:id="@+id/action_borrowingFormFragment_to_signaturePadFragment"
+            app:destination="@id/signaturePadFragment" />
+        <action
+            android:id="@+id/action_borrowingFormFragment_to_searchDocumentFragment"
+            app:destination="@id/searchDocumentFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/signaturePadFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.lending.SignaturePadFragment"
+        android:label=""
+        tools:layout="@layout/fragment_signature_pad" />
+    <fragment
+        android:id="@+id/historiesSoFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.scan.histories.HistoriesSoFragment"
+        android:label="fragment_histories_so"
+        tools:layout="@layout/fragment_histories_so" />
+    <fragment
+        android:id="@+id/detailBorrowedDocumentFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.lending.DetailBorrowedDocumentFragment"
+        android:label=""
+        tools:layout="@layout/fragment_detail_borrowed_document" >
+        <action
+            android:id="@+id/action_detailBorrowedDocumentFragment_to_signaturePadFragment"
+            app:destination="@id/signaturePadFragment" />
+        <action
+            android:id="@+id/action_detailBorrowedDocumentFragment_to_historyBorrowedFragment"
+            app:destination="@id/historyBorrowedFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/historyBorrowedFragment"
+        android:name="com.partnership.bjbdocumenttrackerreader.ui.lending.HistoryBorrowedFragment"
+        android:label="fragment_history_borrowed"
+        tools:layout="@layout/fragment_history_borrowed" />
 </navigation>

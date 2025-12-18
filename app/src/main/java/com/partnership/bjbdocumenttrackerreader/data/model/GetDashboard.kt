@@ -2,20 +2,27 @@ package com.partnership.bjbdocumenttrackerreader.data.model
 
 data class GetDashboard(
     val overview: Overview,
-    val totalDocuments: Int,
     val totalAgunan: Int,
-    val dashboard: DashboardDetail
+    val totalDocuments: Int,
+    val totalBorrowedDocuments: Int,
+    val lastStockOpname: LastStockOpname
 )
+
 
 data class Overview(
     val lastTimeScan: String,
     val totalData: Int,
-    val totalvalue: Double
+    val totalValue: Double
 )
 
-data class DashboardDetail(
-    val totalDocumentsFound: Int,
-    val totalDocumentsLost: Int,
-    val valueLostDocument: Double,
-    val listDocumentLost: List<String>
+data class LastStockOpname(
+    val document: StockOpnameDetail,
+    val agunan: StockOpnameDetail
+)
+
+data class StockOpnameDetail(
+    val lastTimeScan: String?,
+    val totalFound: Int,
+    val totalMissing: Int,
+    val totalItems: Int
 )

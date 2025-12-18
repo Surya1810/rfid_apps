@@ -17,7 +17,8 @@ data class Document(
     val segment: String? = null,
     val amountAgunan: Int? = null,
     val location: Location? = null,
-    val isThere: Boolean
+    val isThere: Boolean,
+    val isBorrowed: Boolean
 )
 
 data class Location(

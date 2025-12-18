@@ -14,7 +14,6 @@ import com.partnership.bjbdocumenttrackerreader.data.local.dao.AssetDao
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
 import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepositoryImpl
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
-import com.partnership.bjbdocumenttrackerreader.ui.paging.LostDocumentPagingSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -27,12 +26,6 @@ class DashboardViewModel @Inject constructor(private val repository: RFIDReposit
     private val _getDashboard = MutableLiveData<ResultWrapper<BaseResponse<GetDashboard>>>()
     val dataDashboard: LiveData<ResultWrapper<BaseResponse<GetDashboard>>>
         get() = _getDashboard
-
-
-    val lostDocumentPagingData: Flow<PagingData<String>> = Pager(
-        config = PagingConfig(pageSize = 10),
-        pagingSourceFactory = { LostDocumentPagingSource(repository) }
-    ).flow.cachedIn(viewModelScope)
 
     fun getDashboard() {
         viewModelScope.launch(Dispatchers.IO) { // Pindahkan ke IO Thread

@@ -2,6 +2,7 @@ package com.partnership.bjbdocumenttrackerreader.ui.search
 
 import android.graphics.PorterDuff
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -37,6 +38,7 @@ import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
 import com.partnership.bjbdocumenttrackerreader.ui.adapter.SearchAdapter
 import com.partnership.bjbdocumenttrackerreader.ui.adapter.SegmentFilterAdapter
 import com.partnership.bjbdocumenttrackerreader.ui.home.DashboardViewModel
+import com.partnership.bjbdocumenttrackerreader.ui.lending.BorrowingViewModel
 import com.partnership.bjbdocumenttrackerreader.ui.scan.StockOpnameViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -48,6 +50,7 @@ class SearchDocumentFragment : Fragment() {
 
     private val stockOpnameViewModel: StockOpnameViewModel by activityViewModels()
     private val dashboardViewModel: DashboardViewModel by activityViewModels()
+    private val borrowViewModel: BorrowingViewModel by activityViewModels()
     private var _binding: FragmentSearchDocumentBinding? = null
     private var isDocument by Delegates.notNull<Boolean>()
     private lateinit var searchAdapter: SearchAdapter
@@ -65,20 +68,36 @@ class SearchDocumentFragment : Fragment() {
         _binding = FragmentSearchDocumentBinding.inflate(inflater, container, false)
         setupToolbar()
         setUpMenu()
+
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        dashboardViewModel.isDocumentSelected.observe(viewLifecycleOwner) {
-            isDocument = it
-            stockOpnameViewModel.getSearchDocument(it)
+        if (borrowViewModel.isCreteBorrow.value == true){
+            stockOpnameViewModel.searchWithCurrentFilter(true)
+            isDocument = true
+            stockOpnameViewModel.setSelectedStatus("not_borrowed")
+        }else{
+            dashboardViewModel.isDocumentSelected.observe(viewLifecycleOwner) {
+                isDocument = it
+                stockOpnameViewModel.searchWithCurrentFilter(it)
+            }
         }
 
         searchAdapter = SearchAdapter { document ->
-            stockOpnameViewModel.setDataToSearchingDocument(document)
-            findNavController().navigate(R.id.action_searchDocumentFragment_to_searchingDocumentFragment)
+            if (borrowViewModel.isCreteBorrow.value == true){
+                if (document.isBorrowed){
+                    Toast.makeText(requireContext(), "Dokumen ini sudah dipinjam", Toast.LENGTH_SHORT).show()
+                }else{
+                    borrowViewModel.setDocument(document)
+                    borrowViewModel.setIsCreateBorrow(false)
+                    findNavController().popBackStack()
+                }
+            }else{
+                stockOpnameViewModel.setDataToSearchingDocument(document)
+                findNavController().navigate(R.id.action_searchDocumentFragment_to_searchingDocumentFragment)
+            }
         }
 
         stockOpnameViewModel.listSearch.observe(viewLifecycleOwner) {
@@ -229,7 +248,7 @@ class SearchDocumentFragment : Fragment() {
                     setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                         override fun onQueryTextSubmit(query: String?): Boolean {
                             if (query != null) {
-                                stockOpnameViewModel.getSearchDocument(isDocument, query)
+                                stockOpnameViewModel.searchWithCurrentFilter(isDocument, query)
                             }
                             return true
                         }
@@ -322,6 +341,43 @@ class SearchDocumentFragment : Fragment() {
             initialSelectedSegment = currentSelectedSegment
         ) { selectedValueForApi: String? ->
             stockOpnameViewModel.setSelectedSegment(selectedValueForApi)
+        }
+
+        val chipGroupStatus = view.findViewById<com.google.android.material.chip.ChipGroup>(R.id.chipGroupStatus)
+
+        stockOpnameViewModel.selectedStatus.observe(viewLifecycleOwner) { status ->
+            when (status) {
+                null -> chipGroupStatus.check(R.id.chipAll)
+                "borrowed" -> chipGroupStatus.check(R.id.chipDipinjam)
+                "not_borrowed" -> chipGroupStatus.check(R.id.chipTidakDipinjam)
+            }
+        }
+
+        chipGroupStatus.setOnCheckedStateChangeListener { group, checkedIds ->
+            if (checkedIds.isEmpty()) return@setOnCheckedStateChangeListener
+
+            when (checkedIds.first()) {
+                R.id.chipAll -> {
+                    // ambil semua data
+                    stockOpnameViewModel.setSelectedStatus(null)
+                }
+
+                R.id.chipDipinjam -> {
+                    // hanya yang dipinjam
+                    stockOpnameViewModel.setSelectedStatus("borrowed")
+                }
+
+                R.id.chipTidakDipinjam -> {
+                    // hanya yang tidak dipinjam
+                    stockOpnameViewModel.setSelectedStatus("not_borrowed")
+                }
+            }
+        }
+
+
+        val btnApply = view.findViewById<TextView>(R.id.btnApply)
+        btnApply.setOnClickListener {
+            stockOpnameViewModel.searchWithCurrentFilter(isDocument)
             dialog.dismiss()
         }
 

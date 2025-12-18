@@ -52,6 +52,14 @@ class SearchAdapter(
             binding.root.setOnClickListener{
                 onItemClick(item)
             }
+            if (item.isBorrowed){
+                binding.lyStateLending.visibility = View.VISIBLE
+                binding.tvStateLending.text = "Dipinjam"
+                binding.tvStateLending.setTextColor(ContextCompat.getColor(binding.root.context, R.color.md_theme_background))
+                binding.lyStateLending.setCardBackgroundColor(ContextCompat.getColor(binding.root.context, R.color.md_theme_yellow))
+            }else{
+                binding.lyStateLending.visibility = View.GONE
+            }
         }
     }
 
@@ -67,7 +75,6 @@ class SearchAdapter(
     companion object {
         val DiffCallback = object : DiffUtil.ItemCallback<Document>() {
             override fun areItemsTheSame(oldItem: Document, newItem: Document): Boolean {
-                // Bandingkan ID unik jika ada, misalnya epc sebagai identifier
                 return oldItem.id == newItem.id
             }
 

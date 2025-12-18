@@ -7,6 +7,10 @@ import android.view.LayoutInflater
 import android.view.Window
 import android.widget.TextView
 import com.partnership.bjbdocumenttrackerreader.R
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 
 object Utils {
@@ -40,6 +44,19 @@ object Utils {
                 }
             }
         }
+    }
+
+    fun formatDate(dateString: String): String {
+        val input = OffsetDateTime.parse(dateString)
+
+        val formatter = DateTimeFormatter.ofPattern(
+            "dd MMMM yyyy, HH:mm",
+            Locale("id", "ID")
+        )
+
+        return input
+            .atZoneSameInstant(ZoneId.systemDefault())
+            .format(formatter)
     }
 
 }

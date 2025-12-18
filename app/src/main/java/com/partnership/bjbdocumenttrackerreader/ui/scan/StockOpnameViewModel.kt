@@ -9,6 +9,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.partnership.bjbdocumenttrackerreader.data.ResultWrapper
@@ -17,10 +19,12 @@ import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import com.partnership.bjbdocumenttrackerreader.data.model.Document
 import com.partnership.bjbdocumenttrackerreader.data.model.GetBulkDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.GetListSegments
+import com.partnership.bjbdocumenttrackerreader.data.model.LostInfo
 import com.partnership.bjbdocumenttrackerreader.data.model.PostStockOpname
 import com.partnership.bjbdocumenttrackerreader.data.model.TagInfo
 import com.partnership.bjbdocumenttrackerreader.reader.RFIDManager
 import com.partnership.bjbdocumenttrackerreader.repository.RFIDRepositoryImpl
+import com.partnership.bjbdocumenttrackerreader.ui.paging.HistorySoPagingSource
 import com.partnership.bjbdocumenttrackerreader.util.RFIDUtils
 import com.partnership.bjbdocumenttrackerreader.util.SingleLiveEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -84,7 +88,58 @@ class StockOpnameViewModel @Inject constructor(
             }
         }
     }
+    // ====== CATEGORY STATE ======
+    private val _category = MutableStateFlow("dokumen")
+    val category: StateFlow<String> = _category
 
+    fun setCategory(value: String) {
+        _category.value = value
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val historiesDocumentContract = Pager(
+        config = PagingConfig(
+            pageSize = 10,
+            enablePlaceholders = false
+        ),
+        pagingSourceFactory = {
+            HistorySoPagingSource(
+                repository = repository,
+                category = "document"
+            )
+        }
+    ).flow
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val historiesDocumentAgunan = Pager(
+        config = PagingConfig(
+            pageSize = 10,
+            enablePlaceholders = false
+        ),
+        pagingSourceFactory = {
+            HistorySoPagingSource(
+                repository = repository,
+                category = "agunan"
+            )
+        }
+    ).flow
+
+    // ====== LOST OBJECT (NON PAGING) ======
+    private val _lostInfo = MutableStateFlow<LostInfo?>(null)
+    val lostInfo: StateFlow<LostInfo?> = _lostInfo
+
+    fun fetchLostInfo() {
+        viewModelScope.launch {
+            when (val result = repository.getHistoriesSo(1, _category.value)) {
+                is ResultWrapper.Success -> {
+                    _lostInfo.value = result.data.data?.lost
+                }
+                else -> {
+                    _lostInfo.value = null
+                }
+            }
+        }
+    }
 
     fun getCurrentPower(): Int? {
         return reader.getCurrentPower()
@@ -161,30 +216,29 @@ class StockOpnameViewModel @Inject constructor(
     private val _selectedSegment = MutableLiveData<String?>(null)
     val selectedSegment: LiveData<String?> get() = _selectedSegment
 
-    // state internal untuk search
-    private var lastIsDocument: Boolean = true
-    private var lastQuery: String? = null
+    //status
+    private val _selectedStatus = MutableLiveData<String?>(null)
+    val selectedStatus: LiveData<String?> get() = _selectedStatus
 
-    // --- API search utama, dipanggil dari fragment ---
-    fun getSearchDocument(isDocument: Boolean, query: String? = null) {
-        lastIsDocument = isDocument
-        lastQuery = query
-        searchWithCurrentFilter()
+    fun setSelectedStatus(status: String?) {
+        _selectedStatus.value = status
     }
 
     // fungsi helper: selalu pakai kombinasi terakhir isDocument + query + segment
-    private fun searchWithCurrentFilter() {
+    fun searchWithCurrentFilter(isDocument: Boolean, query: String? = null) {
         viewModelScope.launch {
-            val type = if (lastIsDocument) "document" else "agunan"
+            val type = if (isDocument) "document" else "agunan"
             val segment = _selectedSegment.value
-            val query = lastQuery
+            val query = query
+            val status = _selectedStatus.value
 
             _getSearch.value = ResultWrapper.Loading
 
             _getSearch.value = repository.searchAsset(
                 type = type,
                 search = query,
-                segment = segment
+                segment = segment,
+                status = status
             )
         }
     }
@@ -202,15 +256,10 @@ class StockOpnameViewModel @Inject constructor(
     // dipanggil ketika user pilih filter di bottom sheet
     fun setSelectedSegment(segment: String?) {
         _selectedSegment.value = segment
-        // setiap ganti filter -> ulang search dengan query terakhir
-        searchWithCurrentFilter()
     }
 
     fun clearSearch() {
         _getSearch.value = null
-        lastQuery = null
-        // kalau mau, bisa reset filter juga:
-        // _selectedSegment.value = null
     }
     private val _getBulkDocument = SingleLiveEvent<ResultWrapper<BaseResponse<GetBulkDocument>>?>()
     val listBulkDocument: LiveData<ResultWrapper<BaseResponse<GetBulkDocument>>?> get() = _getBulkDocument

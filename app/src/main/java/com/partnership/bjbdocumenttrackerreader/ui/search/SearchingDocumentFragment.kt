@@ -56,6 +56,7 @@ class SearchingDocumentFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentSearchingDocumentBinding.inflate(inflater, container, false)
+        stockOpnameViewModel.setSelectedStatus(null)
         return binding.root
     }
 
@@ -64,7 +65,6 @@ class SearchingDocumentFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupToolbar()
         setUpMenu()
-
         searchViewModel.isFound.observe(viewLifecycleOwner) {
             isFound = it
             if (it) {

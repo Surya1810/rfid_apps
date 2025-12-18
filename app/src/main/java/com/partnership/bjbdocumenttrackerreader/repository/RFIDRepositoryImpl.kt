@@ -10,6 +10,9 @@ import com.partnership.bjbdocumenttrackerreader.data.model.AssetStatus
 import com.partnership.bjbdocumenttrackerreader.data.model.BaseResponse
 import com.partnership.bjbdocumenttrackerreader.data.model.GetBulkDocument
 import com.partnership.bjbdocumenttrackerreader.data.model.GetDashboard
+import com.partnership.bjbdocumenttrackerreader.data.model.GetDetailBorrowed
+import com.partnership.bjbdocumenttrackerreader.data.model.GetHistoriesResponse
+import com.partnership.bjbdocumenttrackerreader.data.model.GetHistoryBorrow
 import com.partnership.bjbdocumenttrackerreader.data.model.GetListSegments
 import com.partnership.bjbdocumenttrackerreader.data.model.GetListTutorialVideo
 import com.partnership.bjbdocumenttrackerreader.data.model.PostLostDocument
@@ -19,8 +22,13 @@ import com.partnership.bjbdocumenttrackerreader.data.network.ApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
 import retrofit2.HttpException
+import java.io.File
 import javax.inject.Inject
 
 class RFIDRepositoryImpl @Inject constructor(
@@ -49,27 +57,39 @@ class RFIDRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getListLostDocument(page: Int): ResultWrapper<BaseResponse<List<String>>> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val response = apiService.getListLostDocument(page)
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
-                        ResultWrapper.Success(body)
-                    } else {
-                        ResultWrapper.Error("Response body is null")
-                    }
+    override suspend fun getHistoriesSo(
+        page: Int,
+        category: String
+    ): ResultWrapper<BaseResponse<GetHistoriesResponse>> {
+        return try {
+            val response = apiService.getHistoriesSO(
+                page = page,
+                type = category
+            )
+
+            if (response.isSuccessful) {
+                val body = response.body()
+
+                if (body != null) {
+                    ResultWrapper.Success(body)
                 } else {
-                    ResultWrapper.ErrorResponse("Error response: ${response.errorBody()?.string() ?: "Unknown error"}")
+                    ResultWrapper.ErrorResponse("Response body is null")
                 }
-            } catch (e: IOException) {
-                ResultWrapper.NetworkError("Network Error: ${e.localizedMessage}")
-            } catch (e: Exception) {
-                ResultWrapper.Error("System Error: ${e.localizedMessage}")
+
+            } else {
+                ResultWrapper.ErrorResponse(
+                    "HTTP ${response.code()} : ${response.message()}"
+                )
             }
+
+        } catch (e: IOException) {
+            ResultWrapper.NetworkError(e.message ?: "Network error")
+        } catch (e: Exception) {
+            ResultWrapper.Error(e.message ?: "Unexpected error")
         }
     }
+
+
     override suspend fun getBulkDocument(): ResultWrapper<BaseResponse<GetBulkDocument>> {
         return try {
             val response = apiService.getBulkDocument()
@@ -152,11 +172,12 @@ class RFIDRepositoryImpl @Inject constructor(
     override suspend fun searchAsset(
         type: String,
         search: String?,
-        segment: String?
+        segment: String?,
+        status: String?
     ): ResultWrapper<BaseResponse<GetBulkDocument>> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getSearch(search,type,segment)
+                val response = apiService.getSearch(search,type,segment, status)
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null) {
@@ -237,6 +258,121 @@ class RFIDRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun borrowDocument(
+        documentId: Int,
+        borrowerName: String,
+        returnDate: String,
+        signature: File
+    ): ResultWrapper<BaseResponse<Unit>> {
+        return try {
+            val documentIdBody =
+                documentId.toString().toRequestBody("text/plain".toMediaType())
+            val borrowerName =
+                borrowerName.toRequestBody("text/plain".toMediaType())
+            val returnDateBody =
+                returnDate.toRequestBody("text/plain".toMediaType())
+
+            val signatureRequest =
+                signature.asRequestBody("image/png".toMediaType())
+
+            val signaturePart = MultipartBody.Part.createFormData(
+                name = "signature",
+                filename = signature.name,
+                body = signatureRequest
+            )
+
+            val response = apiService.borrowDocument(
+                documentId = documentIdBody,
+                borrowerName = borrowerName,
+                returnDate = returnDateBody,
+                signature = signaturePart
+            )
+
+            if (response.isSuccessful && response.body() != null) {
+                ResultWrapper.Success(response.body()!!)
+            } else {
+                ResultWrapper.Error(
+                    error = response.errorBody()?.string() ?: "Peminjaman dokumen gagal"
+                )
+            }
+        } catch (e: Exception) {
+            ResultWrapper.Error(
+                error = e.localizedMessage ?: "Unexpected error, congrats"
+            )
+        }
+    }
+
+    override suspend fun returnDocument(
+        documentId: Int,
+        signature: File
+    ): ResultWrapper<BaseResponse<Unit>> {
+        val signatureRequest =
+            signature.asRequestBody("image/png".toMediaType())
+
+        val signaturePart = MultipartBody.Part.createFormData(
+            name = "signature",
+            filename = signature.name,
+            body = signatureRequest
+        )
+
+        val response = apiService.returnDocument(
+            documentId = documentId,
+            signature = signaturePart
+        )
+
+        if (response.isSuccessful && response.body() != null) {
+            return ResultWrapper.Success(response.body()!!)
+        } else {
+            return ResultWrapper.Error(
+                error = response.errorBody()?.string() ?: "Pengembalian dokumen gagal"
+            )
+        }
+    }
+
+    override suspend fun getDetailBorrowed(documentId: Int): ResultWrapper<BaseResponse<GetDetailBorrowed>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getDetailBorrowed(documentId)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null) {
+                        ResultWrapper.Success(body)
+                    } else {
+                        ResultWrapper.Error("Response body is null")
+                    }
+                }
+                else {
+                    ResultWrapper.Error("Error: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                ResultWrapper.Error(e.message ?: "Unknown Error")
+            }
+        }
+    }
+
+    override suspend fun getHistoryBorrow(idDocument: Int): ResultWrapper<BaseResponse<GetHistoryBorrow>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getBorrowHistory(idDocument)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null) {
+                        ResultWrapper.Success(body)
+                    } else {
+                        ResultWrapper.Error("Response body is null")
+                    }
+                }
+                else {
+                    ResultWrapper.Error("Error: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                ResultWrapper.Error(e.message ?: "Unknown Error")
+            }
+        }
+
+    }
+
 
     override suspend fun postStockOpnameChunked(
         type: String,
