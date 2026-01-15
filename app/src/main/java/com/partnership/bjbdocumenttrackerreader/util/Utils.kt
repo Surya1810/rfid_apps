@@ -59,4 +59,17 @@ object Utils {
             .format(formatter)
     }
 
+    fun formatDateOnly(dateString : String):String{
+        val input = OffsetDateTime.parse(dateString)
+
+        val formatter = DateTimeFormatter.ofPattern(
+            "dd MMMM yyyy",
+            Locale("id", "ID")
+        )
+
+        return input
+            .atZoneSameInstant(ZoneId.systemDefault())
+            .format(formatter)
+    }
+
 }

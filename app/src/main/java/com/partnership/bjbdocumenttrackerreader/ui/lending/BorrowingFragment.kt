@@ -46,7 +46,7 @@ class BorrowingFragment : Fragment() {
     private var _binding: FragmentBorrowingBinding? = null
     private val binding get() = _binding!!
     private var filterDialog: BottomSheetDialog? = null
-    private val stockOpnameViewModel: StockOpnameViewModel by viewModels()
+    private val stockOpnameViewModel: StockOpnameViewModel by activityViewModels ()
     private val borrowViewModel : BorrowingViewModel by activityViewModels()
 
     override fun onCreateView(
@@ -55,7 +55,6 @@ class BorrowingFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentBorrowingBinding.inflate(inflater, container, false)
-        stockOpnameViewModel.setSelectedStatus("borrowed")
         setUpMenu()
         setupToolbar()
         return binding.root
@@ -63,6 +62,11 @@ class BorrowingFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Set default status ke "borrowed" hanya jika belum pernah diset
+        if (stockOpnameViewModel.selectedStatus.value == null) {
+            stockOpnameViewModel.setSelectedStatus("borrowed")
+        }
 
         searchAdapter = SearchAdapter { document ->
             borrowViewModel.setDocument(document)
@@ -298,13 +302,14 @@ class BorrowingFragment : Fragment() {
         val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
         tvTitle.text = "Filter Segmen"
         rvSegments.layoutManager = LinearLayoutManager(requireContext())
-        rvSegments.adapter = SegmentFilterAdapter(
+        val segmentAdapter = SegmentFilterAdapter(
             segments = segments,
             initialSelectedSegment = currentSelectedSegment
         ) { selectedValueForApi: String? ->
-            stockOpnameViewModel.setSelectedSegment(selectedValueForApi)
-            dialog.dismiss()
+            // Jangan dismiss di sini, hanya update selection di adapter
+            // Dialog akan close saat tombol Apply ditekan
         }
+        rvSegments.adapter = segmentAdapter
 
         val chipGroupStatus = view.findViewById<com.google.android.material.chip.ChipGroup>(R.id.chipGroupStatus)
 
@@ -337,9 +342,11 @@ class BorrowingFragment : Fragment() {
             }
         }
 
-
         val btnApply = view.findViewById<TextView>(R.id.btnApply)
         btnApply.setOnClickListener {
+            // Ambil nilai yang dipilih dari adapter
+            val selectedSegment = segmentAdapter.getSelectedValueForApi()
+            stockOpnameViewModel.setSelectedSegment(selectedSegment)
             stockOpnameViewModel.searchWithCurrentFilter(true)
             dialog.dismiss()
         }

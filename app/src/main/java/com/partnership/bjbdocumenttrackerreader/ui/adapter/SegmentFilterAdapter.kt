@@ -19,7 +19,7 @@ class SegmentFilterAdapter(
     private val items: List<String> = listOf("Semua") + segments.map { it.name }
 
     // Tentukan posisi awal berdasarkan initialSelectedSegment
-    private var selectedPosition: Int = when (initialSelectedSegment) {
+    var selectedPosition: Int = when (initialSelectedSegment) {
         null -> 0 // "Semua"
         else -> {
             val index = items.indexOf(initialSelectedSegment)

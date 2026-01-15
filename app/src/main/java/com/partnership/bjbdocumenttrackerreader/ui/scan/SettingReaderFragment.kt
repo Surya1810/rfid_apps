@@ -32,7 +32,7 @@ class SettingReaderFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.sliderPower.value = viewModel.getCurrentPower()?.toFloat()!!
+        binding.sliderPower.value = viewModel.getCurrentPower()?.toFloat() ?: 0f
         binding.sliderPower.addOnChangeListener{silder,value,fromUser ->
             if (fromUser){
                 viewModel.setPowerReader(value.toInt())

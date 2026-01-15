@@ -56,17 +56,17 @@ class DetailBorrowedDocumentFragment : Fragment() {
         viewModel.documentSelected.observe(viewLifecycleOwner) {
             if(it != null){
                 setDetailDocument(it)
+                binding.lyNotBorrowed.visibility = View.VISIBLE
+                observeViewModel()
+
                 if(it.isBorrowed){
                     viewModel.getDetailBorrowed(it.id)
                     observeDetailBorrowDocument()
                     binding.lyBorrowed.visibility = View.VISIBLE
-                    binding.lyNotBorrowed.visibility = View.GONE
                 }else{
                     viewModel.getHistoryBorrow(it.id)
                     binding.lyBorrowed.visibility = View.GONE
-                    binding.lyNotBorrowed.visibility = View.VISIBLE
                     setupRecyclerView()
-                    observeViewModel()
                 }
                 selectedDocument = it
             }
@@ -192,7 +192,7 @@ class DetailBorrowedDocumentFragment : Fragment() {
                         binding.tvBorrowerName.text = data.borrowerName
                         binding.tvReturnName.text = data.borrowerName
                         binding.tvBorrowedDate.text = Utils.formatDate(data.borrowedAt)
-                        binding.tvReturningDate.text = Utils.formatDate(data.estimatedReturnDate)
+                        binding.tvReturningDate.text = Utils.formatDateOnly(data.estimatedReturnDate)
                         Glide.with(binding.root.context)
                             .load(data.firstSignature)
                             .placeholder(R.drawable.logo_bjb)
